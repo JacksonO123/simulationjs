@@ -1,16 +1,12 @@
 let fps;
 let bgColor;
 
-class CompatableSimulationObject {
-	constructor() {}
-}
-
 class Simulation {
 	/**
 	 * @param {string} id - id of the canvas element
-	 * @param {number} fps - frames per second
-	 * @param {number} width - width of the Simulation
-	 * @param {number} height - height of the Simulation
+	 * @param {Number} fps - frames per second
+	 * @param {Number} width - width of the Simulation
+	 * @param {Number} height - height of the Simulation
 	 */
 	constructor(id, _fps, width = 500, height = 500) {
 		this.canvas = get(id);
@@ -26,6 +22,11 @@ class Simulation {
 		addEventListener('resize', () => this.resizeCanvas(this));
 		this.resizeCanvas(this);
 	}
+	/**
+	 * 
+	 * @param {Number} width - width of the Simulation
+	 * @param {Number} height - height of the Simulation
+	 */
 	minimize(width = 500, height = 500) {
 		removeEventListener('resize', () => this.resizeCanvas(this));
 		this.width = width;
@@ -33,24 +34,35 @@ class Simulation {
 		this.canvas.width = width;
 		this.canvas.height = height;
 	}
-	resizeCanvas(globalContext) {
-		globalContext.canvas.width = window.innerWidth;
-		globalContext.width = window.innerWidth;
-		globalContext.canvas.height = window.innerHeight;
-		globalContext.height = window.innerHeight;
-		console.log(globalContext.width, globalContext.height);
-		globalContext.ctx.clearRect(0, 0, globalContext.width, globalContext.height);
+	/**
+	 * 
+	 * @param {Simulation} g - simulation to resize
+	 */
+	resizeCanvas(c) {
+		c.canvas.width = window.innerWidth;
+		c.width = window.innerWidth;
+		c.canvas.height = window.innerHeight;
+		c.height = window.innerHeight;
+		c.ctx.clearRect(0, 0, c.width, c.height);
 	}
+	/**
+	 * 
+	 * @param {CompatableSimulationObject} element
+	 */
 	add(element) {
 		if (element instanceof CompatableSimulationObject) {
-			this.scene.push(element);
+			this.scene.unshift(element);
 		} else {
 			console.error('incompatable simulation object', element);
 		}
 	}
+	/**
+	 * 
+	 * @param {CompatableSimulationObject} element
+	 */
 	addBehind(element) {
 		if (element instanceof CompatableSimulationObject) {
-			this.scene.unshift(element);
+			this.scene.push(element);
 		} else {
 			console.error('incompatable simulation object', element);
 		}
@@ -69,33 +81,176 @@ class Simulation {
 		}, 1000 / fps);
 	}
 	/**
-	 * @param {Color} color - background color in hexidecimal
+	 * @param {Color} color
 	 */
 	setBackground(color) {
+		if (typeof color == 'string') {
+			if (color.length == 4) {
+				color = color + color.substring(1);
+			}
+		}
 		if (color instanceof Color) {
 			bgColor = color;
 		} else {
 			bgColor = hexToColorObject(color);
 		}
 	}
+	/**
+	 * 
+	 * @param {String} event
+	 * @param {Function} callback
+	 */
 	on(event, callback) {
 		this.canvas.addEventListener(event, callback);
 	}
 }
 
-class Circle extends CompatableSimulationObject {
-	/**
-	 * @param {number} x - x position
-	 * @param {number} y - y position
-	 * @param {number} radius - circle radius
-	 * @param {Color} color - color of circle
-	 */
-	constructor(x, y, radius, color = new Color(0, 0, 0)) {
-		super();
+class CompatableSimulationObject {
+	constructor(x, y, color) {
 		this.x = x;
 		this.y = y;
-		this.radius = radius;
 		this.color = color;
+	}
+	/**
+	 * @param {Number} t - time
+	 * @param {Color} color
+	 */
+	fill(color, t = 0) {
+		return new Promise((resolve, _) => {
+			if (t == 0) {
+				this.color = color;
+				resolve(this);
+			} else {
+				const rgbStart = this.color;
+				const rgbFinal = color;
+				let currentColor = rgbStart;
+				if (!rgbFinal) {
+					console.error(`Invalid color: ${color}`);
+					resolve(this);
+				}
+				const animationStartTime = Date.now();
+				const g = this;
+				const rChange = (rgbFinal.r - rgbStart.r) / (t * fps);
+				const gChange = (rgbFinal.g - rgbStart.g) / (t * fps);
+				const bChange = (rgbFinal.b - rgbStart.b) / (t * fps);
+				function fillLoop() {
+					g.color.r = currentColor.r;
+					g.color.g = currentColor.g;
+					g.color.b = currentColor.b;
+					currentColor.r += rChange;
+					currentColor.g += gChange;
+					currentColor.b += bChange;
+					setTimeout(() => {
+						if (Date.now() - animationStartTime < t * 1000) {
+							fillLoop();
+						} else {
+							resolve(g);
+						}
+					}, 1000 / fps);
+				}
+				fillLoop();
+			}
+		});
+	}
+	/**
+	 * 
+	 * @param {Number} t - time
+	 * @returns {Promise<Circle>}
+	 */
+	empty(t = 0) {
+		if (typeof t === 'number') {
+			return this.fill('#ffffff', t);
+		} else {
+			return this.fill('#000000', t);
+		}
+	}
+	/**
+	 * 
+	 * @param {Number} t - time
+	 * @param {Number} x - relative x position
+	 * @param {Number} y - relative y position
+	 */
+	move(x, y, t = 0) {
+		if (t == 0) {
+			this.x += x;
+			this.y += y;
+			return;
+		}
+		return new Promise((resolve, reject) => {
+			const animationStartTime = Date.now();
+			const xChange = x / (t * fps);
+			const yChange = y / (t * fps);
+			const g = this;
+			function moveLoop() {
+				g.x += xChange;
+				g.y += yChange;
+				setTimeout(() => {
+					if (Date.now() - animationStartTime < t * 1000) {
+						moveLoop();
+					} else {
+						resolve(g);
+					}
+				}, 1000 / fps);
+			}
+			moveLoop();
+		});
+	}
+	/**
+	 * 
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Boolean} center - whether to center the object
+	 * @param {*} t 
+	 * @returns 
+	 */
+	moveTo(x, y, center = false, t = 0) {
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.x = (x - this.x + (center ? 0 : this.radius));
+				this.x = (y - this.y + (center ? 0 : this.radius));
+				resolve(this);
+			}
+			const animationStartTime = Date.now();
+			const xChange = (x - this.x + (center ? 0 : this.radius)) / (t * fps);
+			const yChange = (y - this.y + (center ? 0 : this.radius)) / (t * fps);
+			const g = this;
+			function moveLoop() {
+				g.x += xChange;
+				g.y += yChange;
+				setTimeout(() => {
+					if (Date.now() - animationStartTime < t * 1000) {
+						moveLoop();
+					} else {
+						resolve(g);
+					}
+				}, 1000 / fps);
+			}
+			moveLoop();
+		})
+	}
+	/**
+	 * 
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @returns {Circle}
+	 */
+	setPosition(x, y) {
+		this.x = x;
+		this.y = y;
+		return this;
+	}
+}
+
+class Circle extends CompatableSimulationObject {
+	/**
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} radius
+	 * @param {Color} color
+	 */
+	constructor(x, y, radius, color = new Color(0, 0, 0)) {
+		super(x, y, color);
+		this.radius = radius;
 		this.expanding = false;
 	}
 	draw(ctx) {
@@ -108,129 +263,45 @@ class Circle extends CompatableSimulationObject {
 		ctx.closePath();
 	}
 	/**
-	 * @param {number} t - time in seconds
-	 * @param {Color} color - color to translate to
+	 * 
+	 * @param {Number} scale
+	 * @param {Number} t - time
+	 * @returns {Promise<Circle>}
 	 */
-	fill(color, t = 0) {
-		if (t == 0) {
-			this.color = color;
-			return;
-		}
+	expand(scale, t = 0) {
 		return new Promise((resolve, reject) => {
-			const rgbStart = this.color;
-			const rgbFinal = color;
-			let currentColor = rgbStart;//new Color(rgbStart.r, rgbStart.g, rgbStart.b);
-			if (!rgbFinal) {
-				console.error(`Invalid color: ${color}`);
-				return this;
+			scale /= 2;
+			if (t == 0) {
+				console.log(this.radius, scale);
+				this.radius *= (scale + 1);
+				console.log(this.radius);
+				resolve(this);
+			} else {
+				const animationStartTime = Date.now();
+				const scaleChange = scale / (t * fps);
+				const g = this;
+				function expandLoop() {
+					g.expanding = true;
+					g.radius *= (scaleChange + 1);
+					setTimeout(() => {
+						if (Date.now() - animationStartTime < t * 1000) {
+							expandLoop();
+						} else {
+							g.expanding = false;
+							resolve(g);
+						}
+					}, 1000 / fps);
+				}
+				if (!this.expanding) expandLoop();
 			}
-			const animationStartTime = Date.now();
-			const globalContext = this;
-			const rChange = (rgbFinal.r - rgbStart.r) / (t * fps);
-			const gChange = (rgbFinal.g - rgbStart.g) / (t * fps);
-			const bChange = (rgbFinal.b - rgbStart.b) / (t * fps);
-			function fillLoop() {
-				globalContext.color.r = currentColor.r;
-				globalContext.color.g = currentColor.g;
-				globalContext.color.b = currentColor.b;
-				currentColor.r += rChange;
-				currentColor.g += gChange;
-				currentColor.b += bChange;
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						fillLoop();
-					} else {
-						resolve(globalContext);
-					}
-				}, 1000 / fps);
-			}
-			fillLoop();
-		});
-	}
-	empty(t = 0) {
-		return this.fill('#ffffff', t);
+		})
 	}
 	/**
 	 * 
-	 * @param {number} t - time in seconds
-	 * @param {number} x - relative x position
-	 * @param {number} y - relative y position
+	 * @param {Number} radius
+	 * @param {Number} t - time
+	 * @returns {Promise<Circle>}
 	 */
-	move(x, y, t = 0) {
-		if (t == 0) {
-			this.x += x;
-			this.y += y;
-			return;
-		}
-		return new Promise((resolve, reject) => {
-			const animationStartTime = Date.now();
-			const xChange = x / (t * fps);
-			const yChange = y / (t * fps);
-			const globalContext = this;
-			function moveLoop() {
-				globalContext.x += xChange;
-				globalContext.y += yChange;
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						moveLoop();
-					} else {
-						resolve(globalContext);
-					}
-				}, 1000 / fps);
-			}
-			moveLoop();
-		});
-	}
-	moveTo(x, y, center = false, t = 0) {
-		if (t == 0) {
-			this.x = (x - this.x + (center ? 0 : this.radius));
-			this.x = (y - this.y + (center ? 0 : this.radius));
-			return;
-		}
-		return new Promise((resolve, reject) => {
-			const animationStartTime = Date.now();
-			const xChange = (x - this.x + (center ? 0 : this.radius)) / (t * fps);
-			const yChange = (y - this.y + (center ? 0 : this.radius)) / (t * fps);
-			const globalContext = this;
-			function moveLoop() {
-				globalContext.x += xChange;
-				globalContext.y += yChange;
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						moveLoop();
-					} else {
-						resolve(globalContext);
-					}
-				}, 1000 / fps);
-			}
-			moveLoop();
-		})
-	}
-	expand(scale, t = 0) {
-		if (t == 0) {
-			this.radius *= scale;
-			return;
-		}
-		return new Promise((resolve, reject) => {
-			scale = scale / 2;
-			const animationStartTime = Date.now();
-			const scaleChange = scale / (t * fps);
-			const globalContext = this;
-			function expandLoop() {
-				globalContext.expanding = true;
-				globalContext.radius *= (scaleChange + 1);
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						expandLoop();
-					} else {
-						globalContext.expanding = false;
-						resolve(globalContext);
-					}
-				}, 1000 / fps);
-			}
-			if (!this.expanding) expandLoop();
-		})
-	}
 	expandTo(radius, t = 0) {
 		if (t == 0) {
 			this.radius = radius;
@@ -239,30 +310,114 @@ class Circle extends CompatableSimulationObject {
 		return new Promise((resolve, reject) => {
 			const animationStartTime = Date.now();
 			const radiusChange = (radius - this.radius) / (t * fps);
-			const globalContext = this;
+			const g = this;
 			function expandLoop() {
-				globalContext.expanding = true;
-				globalContext.radius += radiusChange;
+				g.expanding = true;
+				g.radius += radiusChange;
 				setTimeout(() => {
 					if (Date.now() - animationStartTime < t * 1000) {
 						expandLoop();
 					} else {
-						globalContext.expanding = false;
-						resolve(globalContext);
+						g.expanding = false;
+						resolve(g);
 					}
 				}, 1000 / fps);
 			}
 			if (!this.expanding) expandLoop();
 		});
 	}
-	setPosition(x, y) {
-		this.x = x;
-		this.y = y;
-		return this;
+}
+
+class Square extends CompatableSimulationObject {
+	/**
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {Number} width
+	 * @param {Number} height
+	 * @param {Color} color
+	 */
+	constructor(x, y, width, height, color = new Color(0, 0, 0)) {
+		super(x, y, color);
+		this.width = width;
+		this.height = height;
+	}
+	draw(ctx) {
+		ctx.beginPath();
+		ctx.fillStyle = `rgb(${this.color.r}, ${this.color.g}, ${this.color.b})`;
+		ctx.rect(this.x, this.y, this.width, this.height);
+		ctx.fill();
+		ctx.closePath();
+	}
+	expand(scale, t = 0) {
+		return new Promise((resolve, reject) => {
+			scale = scale / 3;
+			if (t == 0) {
+				this.width *= scale;
+				this.height *= scale;
+				resolve(this);
+			}
+			const animationStartTime = Date.now();
+			const scaleChange = scale / (t * fps);
+			const g = this;
+			function expandLoop() {
+				g.expanding = true;
+				g.width *= (scaleChange + 1);
+				g.height *= (scaleChange + 1);
+				setTimeout(() => {
+					if (Date.now() - animationStartTime < t * 1000) {
+						expandLoop();
+					} else {
+						g.expanding = false;
+						resolve(g);
+					}
+				}, 1000 / fps);
+			}
+			if (!this.expanding) expandLoop();
+		})
+	}
+	/**
+	 * 
+	 * @param {Number} radius - radius to shift circle to
+	 * @param {Number} t - time in seconds
+	 * @returns {Promise<Circle>}
+	 */
+	expandTo(dimensionX, dimensionY, t = 0) {
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.width = dimensionX;
+				this.height = dimensionY;
+				resolve(this)
+			} else {
+				const animationStartTime = Date.now();
+				const dimChangeX = (dimensionX - this.width) / (t * fps);
+				const dimChangeY = (dimensionY - this.height) / (t * fps);
+				const g = this;
+				function expandLoop() {
+					g.expanding = true;
+					g.width += dimChangeX;
+					g.height += dimChangeY;
+					setTimeout(() => {
+						if (Date.now() - animationStartTime < t * 1000) {
+							expandLoop();
+						} else {
+							g.expanding = false;
+							resolve(g);
+						}
+					}, 1000 / fps);
+				}
+				if (!this.expanding) expandLoop();
+			}
+		});
 	}
 }
 
 class Color {
+	/**
+	 * 
+	 * @param {Number} r
+	 * @param {Number} g 
+	 * @param {Number} b 
+	 */
 	constructor(r = 0, g = 0, b = 0) {
 		this.r = r;
 		this.g = g;

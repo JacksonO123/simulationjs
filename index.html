@@ -18,5 +18,35 @@
 	</head>
 	<body>
 		<!-- code -->
+		<canvas id="canvas"></canvas>
+		<script>
+			const canvas = new Simulation('canvas', 60);
+			canvas.fitWindow();
+			canvas.setBackground('#000');
+
+			const circle = new Circle(100, 100, 25, new Color(0, 0, 255));
+			canvas.add(circle);
+
+			canvas.on('mousemove', e => {
+				circle.setPosition(e.offsetX, e.offsetY);
+			});
+
+			async function main() {
+				await circle.expand(2, 1.5);
+				await circle.expand(-2, 1.5);
+				main();
+			}
+
+			async function colorLoop() {
+				await circle.fill(new Color(255, 0, 0), 0.5);
+				await circle.fill(new Color(0, 0, 255), 0.5);
+				colorLoop();
+			}
+
+			setTimeout(() => {
+				main();
+				colorLoop();
+			}, 500);
+		</script>
 	</body>
 </html>

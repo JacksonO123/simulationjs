@@ -24,57 +24,61 @@ Simulation class:
  - 30 to 200 fps is recommended for the best animation
 
 [ Simulation.fitWindow(); ]
- - expands the canvas to fit the size of the window
+ - expands canvas element to fit screen size
 
 [ Simulation.minimize({width}, {height}); ]
- - minimizes the canvas to the width and height provided
+ - minimizes canvas element to the width and height provided
 
 [ Simulation.add({element}); ]
  - adds element to be rendered in the simulation
- - only compatable simulation objects will be added
+ - only objects that extend CompatableSimulationObject will be added
 
 [ Simulation.setBackgruond({color}); ]
- - sets the background of the simulation to the color provided
+ - sets background of the simulation to the color provided
  - color must be in the form of hexidecimal or Color object (shown later)
 
 [ Simulation.on({event}, {callback}); ]
- - creates event listener on canvas, calling the provided callback function
+ - creates event listener on canvas, with the provided callback function
 
 Color class:
 
 [ Color({r value}, {g value}, {b value}); ]
- - creates rgb color with the values provided
  - r, g, and b must be integers between 0 and 255
 
+CompatableSimulationObject class:
+ - not to be used directly, but extended by other classes
+
+[ CompatableSimulationObject.fill({color}, {?time}) ]
+ - transitions the color of the object from the current to the color provided
+ - time of transition animation, optional - defaulted to 0
+ - color must be a Color object
+
+[ CompatableSimulationObject.empty(); ]
+ - fills the circle with white
+
+[ CompatableSimulationObject.move({x}, {y}, {?time}); ]
+ - moves the object x and y relative to current position
+ - time of transition animation, optional - defaulted to 0
+ - color must be a Color object
+
+[ CompatableSimulationObject.moveTo({x}, {y}, {?center}, {?time}); ]
+ - moves the object to the x and y coordinates specified (not relative to current position)
+ - center parameter defines if the center of the circle or top left corner of the circle
+   should be moved to the defined coordinates
+ - time of transition animation, optional - defaulted to 0
+ - color must be a Color object
+
+[ CompatableSimulationObject.setPosition({x}, {y}); ]
+ - sets x and y position of object
+ - method does not have a transition effect
+
 Circle class:
+ - extends CompatableSimulationObject
 
 [ new Circle({x}, {y}, {radius}, {?color}); ]
  - creates new instance of Circle Simulation Object
  - color must be a Color object
  - color is defaulted to black when no parameter is provided
-
-[ Circle.fill({color}, {?time}) ]
- - transitions the color of the circle from the current to the color provided
- - time parameter defines how long the transition animation is
- - time parameter is defaulted to 0 when no value is provided
- - color must be a Color object
-
-[ Circle.empty(); ]
- - fills the circle with white
-
-[ Circle.move({x}, {y}, {?time}); ]
- - moves the circle the x and y position relative to current position
- - time parameter defines how long the transition animation is
- - time parameter is defaulted to 0 when no value is provided
- - color must be a Color object
-
-[ Circle.moveTo({x}, {y}, {?center}, {?time}); ]
- - moves the circle to the x and y coordinates specified (not relative to current position)
- - center parameter defines if the center of the circle or top left corner of the circle
-   should be moved to the defined coordinates
- - time parameter defines how long the transition animation is
- - time parameter is defaulted to 0 when no value is provided
- - color must be a Color object
 
 [ Circle.expand({scale}, {?time}); ]
  - expands the circle by the scale provided
@@ -88,9 +92,22 @@ Circle class:
  - time parameter is defaulted to 0 when no value is provided
  - color must be a Color object
 
-[ Circle.setPosition({x}, {y}); ]
- - sets x and y position of circle to parameters provided
- - the method does not have a transition effect
+Square class:
+ - extends CompatableSimulationObject
+
+[ new Square({x}, {y}, {width}, {height}, {?color})]
+ - instantiates new square with x, y, width, and height
+ - color must be a Color object, optional - defaulted to black
+
+[ Square.expand({scale}, {?time}) ]
+ - expands the square by the scale provided
+ - time of transition animation, optional - defaulted to 0
+ - color must be a Color object
+
+[ Square.expandTo({width}, {height}, {?time}) ]
+ - expands square to the width and height provided
+ - time of transition animation, optional - defaulted to 0
+ - color must be a Color objec
 
 Extra methods probided with library:
 
@@ -107,5 +124,3 @@ Extra methods probided with library:
  - returns random number between 0 and {range}
  - scale scales the random number
  - scale is defaulted to 1 when no parameter is present
-
-* more coming soon *
