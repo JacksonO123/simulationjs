@@ -7,67 +7,16 @@
 			* {
 				padding: 0;
 				margin: 0;
-				font-family: sans-serif;
 				box-sizing: border-box;
 			}
-			body {
+			body { /* optional for better canvas positioning */
 				display: flex;
 				justify-content: center;
 				align-items: center;
 			}
-			.controls {
-				position: absolute;
-				top: 10px;
-				left: 10px;
-				padding: 8px;
-				background: white;
-				border: none;
-				border-radius: 8px;
-				display: flex;
-				gap: 8px;
-				box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-			}
 		</style>
 	</head>
 	<body>
-		<div class="controls">
-			<input type="range" oninput="updateRadius(this)" />
-			<input type="color" oninput="updateColor(this)" />
-		</div>
-		<canvas id="canvas"></canvas>
-		<script>
-			const canvas = new Simulation('canvas', 60);
-			canvas.fitWindow();
-			canvas.setBackground(new Color(0, 0, 0));
-			let mousedown = false;
-			let radius = 20
-			let color = new Color(255, 255, 255);
-
-			const circle = new Circle(200, 200, radius, color);
-			canvas.add(circle);
-
-			canvas.on('mousedown', () => {
-				mousedown = true;
-			});
-			canvas.on('mouseup', () => {
-				mousedown = false;
-			});
-			canvas.on('mousemove', e => {
-				circle.setPosition(e.offsetX, e.offsetY);
-				if (mousedown) {
-					const newCircle = new Circle(e.offsetX, e.offsetY, radius, new Color(color.r, color.g, color.b));
-					canvas.add(newCircle);
-				}
-			});
-
-			function updateRadius(el) {
-				radius = +el.value;
-				circle.expandTo(radius);
-			}
-			function updateColor(el) {
-				color = hexToColorObject(el.value);
-				circle.fill(color);
-			}
-		</script>
+		<!-- code -->
 	</body>
 </html>
