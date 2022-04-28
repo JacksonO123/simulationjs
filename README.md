@@ -1,0 +1,1 @@
+A html canvas framework for simplifying graphical games and animations.

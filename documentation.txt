@@ -1,0 +1,111 @@
+{} : parameter description
+?  : optional
+
+Getting started:
+
+1) include the simulation.js file in your project and link in the head
+2) create the Simulation object with [ new Simulation({canvas id}, {frame rate}); ]
+	Example:
+		const canvas = new Simulation('canvasId', 60);
+3) create an async main function to run multiple movements after one another
+	Example:
+		async function main() {
+			await canvas.moveTo(100, 100, 2);
+			await canvas.expand(2, 1);
+		}
+		main();
+
+<------------------>
+
+Simulation class:
+
+[ new Simulation({canvas id}, {frame rate}, {?width}, {?height}) ];
+ - creates instance of Simulation class
+ - 30 to 200 fps is recommended for the best animation
+
+[ Simulation.fitWindow(); ]
+ - expands the canvas to fit the size of the window
+
+[ Simulation.minimize({width}, {height}); ]
+ - minimizes the canvas to the width and height provided
+
+[ Simulation.add({element}); ]
+ - adds element to be rendered in the simulation
+ - only compatable simulation objects will be added
+
+[ Simulation.setBackgruond({color}); ]
+ - sets the background of the simulation to the color provided
+ - color must be in the form of hexidecimal or Color object (shown later)
+
+[ Simulation.on({event}, {callback}); ]
+ - creates event listener on canvas, calling the provided callback function
+
+Color class:
+
+[ Color({r value}, {g value}, {b value}); ]
+ - creates rgb color with the values provided
+ - r, g, and b must be integers between 0 and 255
+
+Circle class:
+
+[ new Circle({x}, {y}, {radius}, {?color}); ]
+ - creates new instance of Circle Simulation Object
+ - color must be a Color object
+ - color is defaulted to black when no parameter is provided
+
+[ Circle.fill({color}, {?time}) ]
+ - transitions the color of the circle from the current to the color provided
+ - time parameter defines how long the transition animation is
+ - time parameter is defaulted to 0 when no value is provided
+ - color must be a Color object
+
+[ Circle.empty(); ]
+ - fills the circle with white
+
+[ Circle.move({x}, {y}, {?time}); ]
+ - moves the circle the x and y position relative to current position
+ - time parameter defines how long the transition animation is
+ - time parameter is defaulted to 0 when no value is provided
+ - color must be a Color object
+
+[ Circle.moveTo({x}, {y}, {?center}, {?time}); ]
+ - moves the circle to the x and y coordinates specified (not relative to current position)
+ - center parameter defines if the center of the circle or top left corner of the circle
+   should be moved to the defined coordinates
+ - time parameter defines how long the transition animation is
+ - time parameter is defaulted to 0 when no value is provided
+ - color must be a Color object
+
+[ Circle.expand({scale}, {?time}); ]
+ - expands the circle by the scale provided
+ - time parameter defines how long the transition animation is
+ - time parameter is defaulted to 0 when no value is provided
+ - color must be a Color object
+
+[ Circle.expandTo({radius}, {?time}); ]
+ - expands circle to the radius provided
+ - time parameter defines how long the transition animation is
+ - time parameter is defaulted to 0 when no value is provided
+ - color must be a Color object
+
+[ Circle.setPosition({x}, {y}); ]
+ - sets x and y position of circle to parameters provided
+ - the method does not have a transition effect
+
+Extra methods probided with library:
+
+[ get({element id}); ]
+ - returns the element with provided id
+
+[ colorObjectToString({color class}); ]
+ - returns color object in 'rgb({r value}, {g value}, {b value})' string form
+
+[ hexToColorObject({hexidecimal color}); ]
+ - returns color object for the hexidecimal color provided
+
+[ random({range}, {?scale}); ]
+ - returns random number between 0 and {range}
+ - scale scales the random number
+ - scale is defaulted to 1 when no parameter is present
+
+* more coming soon *
