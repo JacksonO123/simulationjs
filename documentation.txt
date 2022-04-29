@@ -1,6 +1,8 @@
 {} : parameter description
 ?  : optional
 
+<------------------------------------------------------------->
+
 Getting started:
 
 1) include the simulation.js file in your project and link in the head
@@ -15,35 +17,39 @@ Getting started:
 		}
 		main();
 
-<------------------>
+<------------------------------------------------------------->
 
 Simulation class:
 
-[ new Simulation({canvas id}, {frame rate}, {?width}, {?height}) ];
+[ new Simulation({canvas id}, {frame rate}, {?width}, {?height}) ]
  - creates instance of Simulation class
  - 30 to 200 fps is recommended for the best animation
 
-[ Simulation.fitWindow(); ]
+[ Simulation.fitWindow() ]
  - expands canvas element to fit screen size
 
-[ Simulation.minimize({width}, {height}); ]
+[ Simulation.minimize({width}, {height}) ]
  - minimizes canvas element to the width and height provided
 
-[ Simulation.add({element}); ]
+[ Simulation.add({element}) ]
  - adds element to be rendered in the simulation
  - only objects that extend CompatableSimulationObject will be added
 
-[ Simulation.setBackgruond({color}); ]
+[ Simulation.setBackgruond({color}) ]
  - sets background of the simulation to the color provided
  - color must be in the form of hexidecimal or Color object (shown later)
 
-[ Simulation.on({event}, {callback}); ]
+[ Simulation.on({event}, {callback}) ]
  - creates event listener on canvas, with the provided callback function
+
+<------------------------------------------------------------->
 
 Color class:
 
-[ Color({r value}, {g value}, {b value}); ]
+[ Color({r value}, {g value}, {b value}) ]
  - r, g, and b must be integers between 0 and 255
+
+<------------------------------------------------------------->
 
 CompatableSimulationObject class:
  - not to be used directly, but extended by other classes
@@ -53,44 +59,54 @@ CompatableSimulationObject class:
  - time of transition animation, optional - defaulted to 0
  - color must be a Color object
 
-[ CompatableSimulationObject.empty(); ]
+[ CompatableSimulationObject.empty() ]
  - fills the circle with white
 
-[ CompatableSimulationObject.move({x}, {y}, {?time}); ]
+[ CompatableSimulationObject.move({x}, {y}, {?time}) ]
  - moves the object x and y relative to current position
  - time of transition animation, optional - defaulted to 0
  - color must be a Color object
 
-[ CompatableSimulationObject.moveTo({x}, {y}, {?center}, {?time}); ]
+[ CompatableSimulationObject.moveTo({x}, {y}, {?center}, {?time}) ]
  - moves the object to the x and y coordinates specified (not relative to current position)
  - center parameter defines if the center of the circle or top left corner of the circle
    should be moved to the defined coordinates
  - time of transition animation, optional - defaulted to 0
  - color must be a Color object
 
-[ CompatableSimulationObject.setPosition({x}, {y}); ]
+[ CompatableSimulationObject.setPosition({x}, {y}) ]
  - sets x and y position of object
  - method does not have a transition effect
+
+<------------------------------------------------------------->
 
 Circle class:
  - extends CompatableSimulationObject
 
-[ new Circle({x}, {y}, {radius}, {?color}); ]
+[ new Circle({x}, {y}, {radius}, {?color}) ]
  - creates new instance of Circle Simulation Object
  - color must be a Color object
  - color is defaulted to black when no parameter is provided
 
-[ Circle.expand({scale}, {?time}); ]
+[ Circle.expand({scale}, {?time}) ]
  - expands the circle by the scale provided
  - time parameter defines how long the transition animation is
  - time parameter is defaulted to 0 when no value is provided
  - color must be a Color object
 
-[ Circle.expandTo({radius}, {?time}); ]
+[ Circle.expandTo({radius}, {?time}) ]
  - expands circle to the radius provided
  - time parameter defines how long the transition animation is
  - time parameter is defaulted to 0 when no value is provided
  - color must be a Color object
+
+[ Circle.contains({x}, {y}) ]
+ - returns true if the x and y coordinates are within the circle
+
+[ Circle.on({event}, {callback}) ]
+ - apply supported events to the circle
+
+<------------------------------------------------------------->
 
 Square class:
  - extends CompatableSimulationObject
@@ -109,18 +125,37 @@ Square class:
  - time of transition animation, optional - defaulted to 0
  - color must be a Color objec
 
-Extra methods probided with library:
+[ Square.contains({x}, {y}) ]
+ - returns true if the square contains the x and y coordinates
 
-[ get({element id}); ]
+[ Square.on({event}, {callback}) ]
+ - apply supported events to the square
+
+<------------------------------------------------------------->
+
+Point class:
+
+[ new Point(x, y) ]
+ - instantiates new point at x and y
+
+<------------------------------------------------------------->
+
+Included methods with library:
+
+[ get({element id}) ]
  - returns the element with provided id
 
-[ colorObjectToString({color class}); ]
+[ colorObjectToString({color class}) ]
  - returns color object in 'rgb({r value}, {g value}, {b value})' string form
 
-[ hexToColorObject({hexidecimal color}); ]
+[ hexToColorObject({hexidecimal color}) ]
  - returns color object for the hexidecimal color provided
 
-[ random({range}, {?scale}); ]
+[ random({range}, {?scale}) ]
  - returns random number between 0 and {range}
  - scale scales the random number
  - scale is defaulted to 1 when no parameter is present
+
+[ distance({point1}, {point1}) ]
+ - finds distance between point1 and point2
+ - point1 and point2 must be Point objects

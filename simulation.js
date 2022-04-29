@@ -3,10 +3,10 @@ let bgColor;
 
 class Simulation {
 	/**
-	 * @param {string} id - id of the canvas element
-	 * @param {Number} fps - frames per second
-	 * @param {Number} width - width of the Simulation
-	 * @param {Number} height - height of the Simulation
+	 * @param {string} id - id of the canvas
+	 * @param {Number} fps
+	 * @param {Number} width
+	 * @param {Number} height
 	 */
 	constructor(id, _fps, width = 500, height = 500) {
 		this.canvas = get(id);
@@ -23,9 +23,8 @@ class Simulation {
 		this.resizeCanvas(this);
 	}
 	/**
-	 * 
-	 * @param {Number} width - width of the Simulation
-	 * @param {Number} height - height of the Simulation
+	 * @param {Number} width
+	 * @param {Number} height
 	 */
 	minimize(width = 500, height = 500) {
 		removeEventListener('resize', () => this.resizeCanvas(this));
@@ -35,7 +34,6 @@ class Simulation {
 		this.canvas.height = height;
 	}
 	/**
-	 * 
 	 * @param {Simulation} g - simulation to resize
 	 */
 	resizeCanvas(c) {
@@ -46,26 +44,22 @@ class Simulation {
 		c.ctx.clearRect(0, 0, c.width, c.height);
 	}
 	/**
-	 * 
 	 * @param {CompatableSimulationObject} element
 	 */
 	add(element) {
 		if (element instanceof CompatableSimulationObject) {
-			this.scene.unshift(element);
-		} else {
-			console.error('incompatable simulation object', element);
-		}
+			element.setSimulation(this)
+			this.scene.push(element);
+		} else console.error('incompatable simulation object', element);
 	}
 	/**
-	 * 
 	 * @param {CompatableSimulationObject} element
 	 */
 	addBehind(element) {
 		if (element instanceof CompatableSimulationObject) {
-			this.scene.push(element);
-		} else {
-			console.error('incompatable simulation object', element);
-		}
+			element.setSimulation(this)
+			this.scene.unshift(element);
+		} else console.error('incompatable simulation object', element);
 	}
 	render() {
 		this.ctx.clearRect(0, 0, this.width, this.height);
@@ -96,7 +90,6 @@ class Simulation {
 		}
 	}
 	/**
-	 * 
 	 * @param {String} event
 	 * @param {Function} callback
 	 */
@@ -105,11 +98,25 @@ class Simulation {
 	}
 }
 
+class Point {
+	constructor(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+}
+
 class CompatableSimulationObject {
 	constructor(x, y, color) {
 		this.x = x;
 		this.y = y;
 		this.color = color;
+		this.sim = null;
+	}
+	getPosition() {
+		return {x: this.x, y: this.y}
+	}
+	setSimulation(sim) {
+		this.sim = sim;
 	}
 	/**
 	 * @param {Number} t - time
@@ -153,7 +160,6 @@ class CompatableSimulationObject {
 		});
 	}
 	/**
-	 * 
 	 * @param {Number} t - time
 	 * @returns {Promise<Circle>}
 	 */
@@ -165,38 +171,41 @@ class CompatableSimulationObject {
 		}
 	}
 	/**
-	 * 
 	 * @param {Number} t - time
 	 * @param {Number} x - relative x position
 	 * @param {Number} y - relative y position
 	 */
 	move(x, y, t = 0) {
-		if (t == 0) {
-			this.x += x;
-			this.y += y;
-			return;
-		}
 		return new Promise((resolve, reject) => {
-			const animationStartTime = Date.now();
-			const xChange = x / (t * fps);
-			const yChange = y / (t * fps);
-			const g = this;
-			function moveLoop() {
-				g.x += xChange;
-				g.y += yChange;
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						moveLoop();
-					} else {
-						resolve(g);
-					}
-				}, 1000 / fps);
+			if (t == 0) {
+				this.x += x;
+				this.y += y;
+				resolve(this);
+			} else {
+				const animationStartTime = Date.now();
+				const xChange = x / (t * fps);
+				const yChange = y / (t * fps);
+				const finalXPos = this.x + x;
+				const finalYPos = this.y + y;
+				const g = this;
+				function moveLoop() {
+					g.x += xChange;
+					g.y += yChange;
+					setTimeout(() => {
+						if (Date.now() - animationStartTime < t * 1000) {
+							moveLoop();
+						} else {
+							g.x = finalXPos;
+							g.y = finalYPos;
+							resolve(g);
+						}
+					}, 1000 / fps);
+				}
+				moveLoop();
 			}
-			moveLoop();
 		});
 	}
 	/**
-	 * 
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @param {Boolean} center - whether to center the object
@@ -209,27 +218,27 @@ class CompatableSimulationObject {
 				this.x = (x - this.x + (center ? 0 : this.radius));
 				this.x = (y - this.y + (center ? 0 : this.radius));
 				resolve(this);
+			} else {
+				const animationStartTime = Date.now();
+				const xChange = (x - this.x + (center ? 0 : this.radius)) / (t * fps);
+				const yChange = (y - this.y + (center ? 0 : this.radius)) / (t * fps);
+				const g = this;
+				function moveLoop() {
+					g.x += xChange;
+					g.y += yChange;
+					setTimeout(() => {
+						if (Date.now() - animationStartTime < t * 1000) {
+							moveLoop();
+						} else {
+							resolve(g);
+						}
+					}, 1000 / fps);
+				}
+				moveLoop();
 			}
-			const animationStartTime = Date.now();
-			const xChange = (x - this.x + (center ? 0 : this.radius)) / (t * fps);
-			const yChange = (y - this.y + (center ? 0 : this.radius)) / (t * fps);
-			const g = this;
-			function moveLoop() {
-				g.x += xChange;
-				g.y += yChange;
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						moveLoop();
-					} else {
-						resolve(g);
-					}
-				}, 1000 / fps);
-			}
-			moveLoop();
 		})
 	}
 	/**
-	 * 
 	 * @param {Number} x
 	 * @param {Number} y
 	 * @returns {Circle}
@@ -252,6 +261,7 @@ class Circle extends CompatableSimulationObject {
 		super(x, y, color);
 		this.radius = radius;
 		this.expanding = false;
+		this.hovered = false;
 	}
 	draw(ctx) {
 		ctx.beginPath();
@@ -263,31 +273,32 @@ class Circle extends CompatableSimulationObject {
 		ctx.closePath();
 	}
 	/**
-	 * 
 	 * @param {Number} scale
 	 * @param {Number} t - time
 	 * @returns {Promise<Circle>}
 	 */
 	expand(scale, t = 0) {
+		if (scale <= 0) {
+			scale == 0.1;
+		}
 		return new Promise((resolve, reject) => {
-			scale /= 2;
 			if (t == 0) {
-				console.log(this.radius, scale);
-				this.radius *= (scale + 1);
-				console.log(this.radius);
+				this.radius *= scale;
 				resolve(this);
 			} else {
 				const animationStartTime = Date.now();
-				const scaleChange = scale / (t * fps);
+				const r = this.radius;
+				const radiusChange = ((r * scale) - this.radius) / (t * fps);
 				const g = this;
 				function expandLoop() {
 					g.expanding = true;
-					g.radius *= (scaleChange + 1);
+					g.radius += radiusChange;
 					setTimeout(() => {
 						if (Date.now() - animationStartTime < t * 1000) {
 							expandLoop();
 						} else {
 							g.expanding = false;
+							g.radius = r * scale;
 							resolve(g);
 						}
 					}, 1000 / fps);
@@ -297,34 +308,81 @@ class Circle extends CompatableSimulationObject {
 		})
 	}
 	/**
-	 * 
 	 * @param {Number} radius
 	 * @param {Number} t - time
 	 * @returns {Promise<Circle>}
 	 */
 	expandTo(radius, t = 0) {
-		if (t == 0) {
-			this.radius = radius;
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.radius = radius;
+				resolve(this);
+			} else {
+				const animationStartTime = Date.now();
+				const radiusChange = (radius - this.radius) / (t * fps);
+				const g = this;
+				function expandLoop() {
+					g.expanding = true;
+					g.radius += radiusChange;
+					setTimeout(() => {
+						if (Date.now() - animationStartTime < t * 1000) {
+							expandLoop();
+						} else {
+							g.expanding = false;
+							g.radius = radius;
+							resolve(g);
+						}
+					}, 1000 / fps);
+				}
+				if (!this.expanding) expandLoop();
+			}
+		});
+	}
+	contains(x, y) {
+		if (distance(new Point(x, y), new Point(this.x, this.y)) <= this.radius) {
+			return true;
+		}
+		return false;
+	}
+	/**
+	 * @param {String} event - name of event
+	 * @param {Function} callback - callback function
+	 */
+	on(event, callback) {
+		const supportedEvents = [
+			'mouseover',
+			'mouseleave',
+		];
+		if (!supportedEvents.includes(event)) {
+			console.error('event not supported');
+			console.log('supported events', supportedEvents);
 			return;
 		}
-		return new Promise((resolve, reject) => {
-			const animationStartTime = Date.now();
-			const radiusChange = (radius - this.radius) / (t * fps);
-			const g = this;
-			function expandLoop() {
-				g.expanding = true;
-				g.radius += radiusChange;
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						expandLoop();
-					} else {
-						g.expanding = false;
-						resolve(g);
+		switch (event) {
+			case 'mouseover': {
+				this.sim.on('mousemove', e => {
+					if (this.contains(e.x, e.y)) {
+						if (!this.hovered) {
+							this.hovered = true;
+							callback(e);
+						}
 					}
-				}, 1000 / fps);
+				});
+				break;
 			}
-			if (!this.expanding) expandLoop();
-		});
+			case 'mouseleave': {
+				this.sim.on('mousemove', e => {
+					if (!this.contains(e.x, e.y)) {
+						if (this.hovered) {
+							this.hovered = false;
+							callback(e);
+						}
+					}
+				});
+				break;
+			}
+			default: break;
+		}
 	}
 }
 
@@ -340,6 +398,13 @@ class Square extends CompatableSimulationObject {
 		super(x, y, color);
 		this.width = width;
 		this.height = height;
+		this.hovered = false;
+	}
+	getDimentions() {
+		return {
+			width: this.width,
+			height: this.height
+		}
 	}
 	draw(ctx) {
 		ctx.beginPath();
@@ -349,31 +414,39 @@ class Square extends CompatableSimulationObject {
 		ctx.closePath();
 	}
 	expand(scale, t = 0) {
+		if (scale <= 0) {
+			scale == 0.1;
+		}
 		return new Promise((resolve, reject) => {
-			scale = scale / 3;
 			if (t == 0) {
 				this.width *= scale;
 				this.height *= scale;
 				resolve(this);
+			} else {
+				const animationStartTime = Date.now();
+				const xScaleChange = ((this.width * scale) - this.width) / (t * fps);
+				const yScaleChange = ((this.height * scale) - this.height) / (t * fps);
+				const w = this.width;
+				const h = this.height;
+				const g = this;
+				function expandLoop() {
+					g.expanding = true;
+					g.width += xScaleChange
+					g.height += yScaleChange
+					setTimeout(() => {
+						if (Date.now() - animationStartTime < t * 1000) {
+							expandLoop();
+						} else {
+							g.expanding = false;
+							g.width = w * scale;
+							g.height = h * scale;
+							resolve(g);
+						}
+					}, 1000 / fps);
+				}
+				if (!this.expanding) expandLoop();
 			}
-			const animationStartTime = Date.now();
-			const scaleChange = scale / (t * fps);
-			const g = this;
-			function expandLoop() {
-				g.expanding = true;
-				g.width *= (scaleChange + 1);
-				g.height *= (scaleChange + 1);
-				setTimeout(() => {
-					if (Date.now() - animationStartTime < t * 1000) {
-						expandLoop();
-					} else {
-						g.expanding = false;
-						resolve(g);
-					}
-				}, 1000 / fps);
-			}
-			if (!this.expanding) expandLoop();
-		})
+		});
 	}
 	/**
 	 * 
@@ -408,6 +481,58 @@ class Square extends CompatableSimulationObject {
 				if (!this.expanding) expandLoop();
 			}
 		});
+	}
+	contains(x, y) {
+		if (
+			x <= this.x + this.width &&
+			x >= this.x &&
+			y <= this.y + this.height &&
+			y >= this.y
+		) {
+			return true;
+		}
+		return false;
+	}
+	/**
+	 * 
+	 * @param {String} event - name of event
+	 * @param {Function} callback - callback function
+	 */
+	on(event, callback) {
+		const supportedEvents = [
+			'mouseover',
+			'mouseleave',
+		];
+		if (!supportedEvents.includes(event)) {
+			console.error('event not supported');
+			console.log('supported events', supportedEvents);
+			return;
+		}
+		switch (event) {
+			case 'mouseover': {
+				this.sim.on('mousemove', e => {
+					if (this.contains(e.x, e.y)) {
+						if (!this.hovered) {
+							this.hovered = true;
+							callback(e);
+						}
+					}
+				});
+				break;
+			}
+			case 'mouseleave': {
+				this.sim.on('mousemove', e => {
+					if (!this.contains(e.x, e.y)) {
+						if (this.hovered) {
+							this.hovered = false;
+							callback(e);
+						}
+					}
+				});
+				break;
+			}
+			default: break;
+		}
 	}
 }
 
@@ -453,4 +578,8 @@ const colorObjectToString = (obj) => {
 
 const random = (range, scale = 1) => {
 	return Math.floor(Math.random() * range) * scale;
+}
+
+const distance = (p1, p2) => {
+	return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 }
