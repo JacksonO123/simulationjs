@@ -6,7 +6,7 @@
 Getting started:
 
 1) include the simulation.js file in your project and link in the head
-2) create the Simulation object with [ new Simulation({canvas id}, {frame rate}); ]
+2) create the Simulation object with [ new Simulation({canvas id}, {frame rate}) ]
 	Example:
 		const canvas = new Simulation('canvasId', 60);
 3) create an async main function to run multiple movements after one another
