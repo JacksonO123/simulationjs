@@ -61,6 +61,9 @@ class Simulation {
 			this.scene.unshift(element);
 		} else console.error('incompatable simulation object', element);
 	}
+	clear() {
+		this.scene = [];
+	}
 	render() {
 		this.ctx.clearRect(0, 0, this.width, this.height);
 		this.ctx.beginPath();
