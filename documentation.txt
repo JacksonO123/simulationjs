@@ -28,7 +28,7 @@ Simulation class:
 [ Simulation.fitWindow() ]
  - expands canvas element to fit screen size
 
-[ Simulation.minimize({width}, {height}) ]
+[ Simulation.fitTo({width}, {height}) ]
  - minimizes canvas element to the width and height provided
 
 [ Simulation.add({element}) ]

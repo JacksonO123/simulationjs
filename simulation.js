@@ -26,7 +26,7 @@ class Simulation {
 	 * @param {Number} width
 	 * @param {Number} height
 	 */
-	minimize(width = 500, height = 500) {
+	fitTo(width = 500, height = 500) {
 		removeEventListener('resize', () => this.resizeCanvas(this));
 		this.width = width;
 		this.height = height;
