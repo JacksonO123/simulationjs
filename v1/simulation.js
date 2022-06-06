@@ -116,7 +116,7 @@ class CompatableSimulationObject {
 		this.sim = null;
 	}
 	getPosition() {
-		return {x: this.x, y: this.y}
+		return { x: this.x, y: this.y }
 	}
 	setSimulation(sim) {
 		this.sim = sim;

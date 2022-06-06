@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Simulation.js v2</title>
+		<script src="simulation.js"></script>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<script>
+			const canvas = new Simulation('canvas', 60);
+			canvas.setBgColor(new Color(0, 0, 0));
+			canvas.fitWindow();
+		</script>
+	</body>
+</html>
