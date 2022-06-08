@@ -11,6 +11,29 @@
 			const canvas = new Simulation('canvas', 60);
 			canvas.setBgColor(new Color(0, 0, 0));
 			canvas.fitWindow();
+
+			const square = new Square(new Point(100, 100), 50, 50, new Color(0, 0, 255), 100, 100);
+			canvas.add(square);
+
+			canvas.on('mousemove', e => {
+				square.moveTo(new Point(e.clientX - square.offsetX, e.clientY - square.offsetY));
+			});
+
+			function main() {
+				setTimeout(() => {
+					square.rotate(2);
+					main();
+				}, 1000 / fps);
+			}
+			main();
+
+			async function changeColors() {
+				await square.fill(new Color(255, 0, 0), 1);
+				await square.fill(new Color(0, 255, 0), 1);
+				await square.fill(new Color(0, 0, 255), 1);
+				changeColors();
+			}
+			changeColors();
 		</script>
 	</body>
 </html>
