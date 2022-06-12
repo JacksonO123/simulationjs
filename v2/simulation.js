@@ -5,6 +5,8 @@ class Vector {
 	constructor(x, y, r = 0) {
 		this.x = x;
 		this.y = y;
+		this.mag = pythag(x, y);
+		this.startAngle = radToDeg(atan2(y, x));
 		this.startX = x;
 		this.startY = y;
 		this.rotation = r;
@@ -22,27 +24,34 @@ class Vector {
 		this.x = this.startX * Math.cos(deg) - this.startY * Math.sin(deg);
 		this.y = this.startX * Math.sin(deg) + this.startY * Math.cos(deg);
 	}
-	draw(c, x = 0, y = 0, color = "#000000", s = 1) {
+	draw(c, x = 0, y = 0, color = '#000000', s = 1) {
 		c.beginPath();
 		c.strokeStyle = color;
 		c.moveTo(x, y);
-		c.lineTo(x + (this.x * s), y + (this.y * s));
+		c.lineTo(x + this.x * s, y + this.y * s);
 		c.stroke();
 		c.closePath();
+	}
+	format() {
+		return `(${this.x}, ${this.y})`;
 	}
 }
 
 class SimulationElement {
 	/**
-	 * @param {Point} pos 
+	 * @param {Point} pos
 	 * @param {Color} color
 	 */
 	constructor(pos, color) {
 		this.pos = pos;
 		this.color = color;
+		this.sim = null;
+	}
+	setSimulationElement(el) {
+		this.sim = el;
 	}
 	/**
-	 * @param {Color} color 
+	 * @param {Color} color
 	 * @param {Number} t - time in seconds
 	 */
 	fill(color, t = 0) {
@@ -51,7 +60,11 @@ class SimulationElement {
 				this.color = color;
 				resolve();
 			} else {
-				const currentColor = new Color(this.color.r, this.color.g, this.color.b);
+				const currentColor = new Color(
+					this.color.r,
+					this.color.g,
+					this.color.b
+				);
 				const changeR = (color.r - this.color.r) / (t * fps);
 				const changeG = (color.g - this.color.g) / (t * fps);
 				const changeB = (color.b - this.color.b) / (t * fps);
@@ -109,10 +122,10 @@ class SimulationElement {
 		});
 	}
 	/**
-	 * @param {Vector} p 
+	 * @param {Vector} p
 	 * @param {Number} t - time in seconds
 	 *
-	*/
+	 */
 	move(p, t = 0) {
 		return new Promise((resolve, reject) => {
 			const startPos = new Point(this.pos.x, this.pos.y);
@@ -156,12 +169,16 @@ class Point extends Vector {
 	constructor(x, y) {
 		super(x, y);
 	}
+	format() {
+		return super.format();
+	}
 }
 
 class Circle extends SimulationElement {
 	constructor(pos, radius, color) {
 		super(pos, color);
 		this.radius = radius;
+		this.hovering = false;
 	}
 	draw(c) {
 		c.beginPath();
@@ -169,6 +186,61 @@ class Circle extends SimulationElement {
 		c.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, false);
 		c.fill();
 		c.closePath();
+	}
+	on(event, callback, callback2) {
+		const validEvents = ['mousemove', 'click', 'hover'];
+		if (!validEvents.includes(event)) {
+			console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
+		}
+
+		switch (event) {
+			case 'mouseover': {
+				this.sim.addEventListener('mousemove', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (!this.hovering && this.contains(p)) {
+						this.hovering = true;
+						callback(e);
+					}
+				});
+				break;
+			}
+			case 'mouseleave': {
+				this.sim.addEventListener('mousemove', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (this.hovering && !this.contains(p)) {
+						this.hovering = false;
+						callback(e);
+					}
+				});
+				break;
+			}
+			case 'hover': {
+				this.on('mouseover', callback);
+				this.on('mouseleave', callback2);
+				break;
+			}
+			case 'mousemove': {
+				this.sim.addEventListener('mousemove', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (this.contains(p)) {
+						callback(e);
+					}
+				});
+				break;
+			}
+			case 'click': {
+				this.sim.addEventListener('click', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (this.contains(p)) {
+						callback(e);
+					}
+				});
+			}
+			default: break;
+		}
+	}
+	contains(p) {
+		return distance(p, this.pos) < this.radius;
 	}
 }
 
@@ -182,7 +254,15 @@ class Square extends SimulationElement {
 	 * @param {Number} offsetY
 	 * @param {Number} rotation - rotation in degrees
 	 */
-	constructor(pos, width, height, color, offsetX = 0, offsetY = 0, rotation = 0) {
+	constructor(
+		pos,
+		width,
+		height,
+		color,
+		offsetX = 0,
+		offsetY = 0,
+		rotation = 0
+	) {
 		super(pos, color);
 		this.width = width;
 		this.height = height;
@@ -190,10 +270,23 @@ class Square extends SimulationElement {
 		this.offsetY = offsetY;
 		this.rotation = rotation;
 		this.showNodeVectors = false;
-		this.topLeft = new Vector(-this.width / 2 - offsetX, -this.height / 2 - offsetY)
-		this.topRight = new Vector(this.width / 2 - offsetX, -this.height / 2 - offsetY)
-		this.bottomLeft = new Vector(-this.width / 2 - offsetX, this.height / 2 - offsetY)
-		this.bottomRight = new Vector(this.width / 2 - offsetX, this.height / 2 - offsetY)
+		this.topLeft = new Vector(
+			-this.width / 2 - offsetX,
+			-this.height / 2 - offsetY
+		);
+		this.topRight = new Vector(
+			this.width / 2 - offsetX,
+			-this.height / 2 - offsetY
+		);
+		this.bottomLeft = new Vector(
+			-this.width / 2 - offsetX,
+			this.height / 2 - offsetY
+		);
+		this.bottomRight = new Vector(
+			this.width / 2 - offsetX,
+			this.height / 2 - offsetY
+		);
+		this.hovering = false;
 		this.#setRotation();
 	}
 	setNodeVectors(show) {
@@ -216,17 +309,124 @@ class Square extends SimulationElement {
 	draw(c) {
 		c.beginPath();
 		c.fillStyle = rgbToHex(this.color);
-		c.moveTo(this.pos.x + this.topLeft.x + this.offsetX, this.pos.y + this.topLeft.y + this.offsetY);
-		c.lineTo(this.pos.x + this.topRight.x + this.offsetX, this.pos.y + this.topRight.y + this.offsetY);
-		c.lineTo(this.pos.x + this.bottomRight.x + this.offsetX, this.pos.y + this.bottomRight.y + this.offsetY);
-		c.lineTo(this.pos.x + this.bottomLeft.x + this.offsetX, this.pos.y + this.bottomLeft.y + this.offsetY);
+		c.moveTo(
+			this.pos.x + this.topLeft.x + this.offsetX,
+			this.pos.y + this.topLeft.y + this.offsetY
+		);
+		c.lineTo(
+			this.pos.x + this.topRight.x + this.offsetX,
+			this.pos.y + this.topRight.y + this.offsetY
+		);
+		c.lineTo(
+			this.pos.x + this.bottomRight.x + this.offsetX,
+			this.pos.y + this.bottomRight.y + this.offsetY
+		);
+		c.lineTo(
+			this.pos.x + this.bottomLeft.x + this.offsetX,
+			this.pos.y + this.bottomLeft.y + this.offsetY
+		);
 		c.fill();
 		c.closePath();
+
 		if (this.showNodeVectors) {
-			this.topLeft.draw(c, this.pos.x + this.offsetX, this.pos.y + this.offsetY);
-			this.topRight.draw(c, this.pos.x + this.offsetX, this.pos.y + this.offsetY);
-			this.bottomLeft.draw(c, this.pos.x + this.offsetX, this.pos.y + this.offsetY);
-			this.bottomRight.draw(c, this.pos.x + this.offsetX, this.pos.y + this.offsetY);
+			this.topLeft.draw(
+				c,
+				this.pos.x + this.offsetX,
+				this.pos.y + this.offsetY
+			);
+			this.topRight.draw(
+				c,
+				this.pos.x + this.offsetX,
+				this.pos.y + this.offsetY
+			);
+			this.bottomLeft.draw(
+				c,
+				this.pos.x + this.offsetX,
+				this.pos.y + this.offsetY
+			);
+			this.bottomRight.draw(
+				c,
+				this.pos.x + this.offsetX,
+				this.pos.y + this.offsetY
+			);
+		}
+	}
+	contains(p) {
+		const topLeftVector = new Vector(this.topLeft.mag, 0);
+		topLeftVector.rotateTo(this.topLeft.startAngle);
+
+		const topRightVector = new Vector(this.topRight.mag, 0);
+		topRightVector.rotateTo(this.topRight.startAngle);
+
+		const bottomLeftVector = new Vector(this.bottomLeft.mag, 0);
+		bottomLeftVector.rotateTo(this.bottomLeft.startAngle);
+
+		const bottomRightVector = new Vector(this.bottomRight.mag, 0);
+		bottomRightVector.rotateTo(this.bottomRight.startAngle);
+
+		const cursorVector = new Vector(p.x - this.pos.x, p.y - this.pos.y);
+		cursorVector.rotateTo(-this.rotation);
+
+		if (
+			cursorVector.x > topRightVector.x &&
+			cursorVector.x < bottomLeftVector.x &&
+			cursorVector.y > topLeftVector.y &&
+			cursorVector.y < topRightVector.y
+		) {
+			return true;
+		}
+		return false;
+	}
+	on(event, callback, callback2) {
+		const validEvents = ['mousemove', 'click', 'hover'];
+		if (!validEvents.includes(event)) {
+			console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
+		}
+		switch (event) {
+			case 'mouseover': {
+				this.sim.addEventListener('mousemove', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (!this.hovering && this.contains(p)) {
+						this.hovering = true;
+						callback(e);
+					}
+				});
+				break;
+			}
+			case 'mouseleave': {
+				this.sim.addEventListener('mousemove', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (this.hovering && !this.contains(p)) {
+						this.hovering = false;
+						callback(e);
+					}
+				});
+				break;
+			}
+			case 'mousemove': {
+				this.sim.addEventListener('mousemove', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (this.contains(p)) {
+						callback(e);
+					}
+				});
+				break;
+			}
+			case 'click': {
+				this.sim.addEventListener('click', (e) => {
+					const p = new Point(e.clientX, e.clientY);
+					if (this.contains(p)) {
+						callback(e);
+					}
+				});
+				break;
+			}
+			case 'hover': {
+				this.on('mouseover', callback);
+				this.on('mouseleave', callback2);
+				break;
+			}
+			default: break;
 		}
 	}
 }
@@ -241,7 +441,7 @@ class Simulation {
 		this.canvas = document.getElementById(id);
 		window.addEventListener('resize', () => this.#resizeCanvas(this.canvas));
 		this.#resizeCanvas(this.canvas);
-		const ctx = this.canvas.getContext("2d");
+		const ctx = this.canvas.getContext('2d');
 
 		this.#render(ctx);
 	}
@@ -262,6 +462,7 @@ class Simulation {
 	}
 	add(element) {
 		if (element instanceof SimulationElement) {
+			element.setSimulationElement(this.canvas);
 			this.scene.push(element);
 		} else {
 			console.warn('Invalid Element. Must be an instance of SimElement');
@@ -280,7 +481,7 @@ class Simulation {
 		this.fullScreen = false;
 	}
 	/**
-	 * @param {Color} color 
+	 * @param {Color} color
 	 */
 	setBgColor(color) {
 		this.bgColor = rgbToHex(color);
@@ -298,12 +499,32 @@ function pythag(x, y) {
 }
 
 function compToHex(c) {
-	let hex = (Math.round(c)).toString(16);
-	return hex.length == 1 ? "0" + hex : hex;
+	let hex = Math.round(c).toString(16);
+	return hex.length == 1 ? '0' + hex : hex;
+}
+
+/***
+ * @param {Point} p1
+ * @param {Point} p2
+ */
+function distance(p1, p2) {
+	return pythag(p1.x - p2.x, p1.y - p2.y);
+}
+
+function atan2(x, y) {
+	return Math.atan2(y, x);
+}
+
+function degToRad(deg) {
+	return (deg * Math.PI) / 180;
+}
+
+function radToDeg(rad) {
+	return (rad * 180) / Math.PI;
 }
 
 /**
- * @param {Color} color 
+ * @param {Color} color
  */
 function rgbToHex(color) {
 	return '#' + compToHex(color.r) + compToHex(color.g) + compToHex(color.b);

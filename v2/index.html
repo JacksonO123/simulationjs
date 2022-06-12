@@ -9,31 +9,35 @@
 		<canvas id="canvas"></canvas>
 		<script>
 			const canvas = new Simulation('canvas', 60);
-			canvas.setBgColor(new Color(0, 0, 0));
 			canvas.fitWindow();
 
-			const square = new Square(new Point(100, 100), 50, 50, new Color(0, 0, 255), 100, 100);
+			const circle = new Circle(new Point(150, 150), 50, new Color(0, 0, 255));
+			canvas.add(circle);
+			
+			const square = new Square(new Point(350, 300), 100, 100, new Color(255, 0, 0));
 			canvas.add(square);
 
-			canvas.on('mousemove', e => {
-				square.moveTo(new Point(e.clientX - square.offsetX, e.clientY - square.offsetY));
+			circle.on('mouseover', () => {
+				circle.fill(new Color(255, 0, 0));
 			});
 
-			function main() {
+			circle.on('mouseleave', () => {
+				circle.fill(new Color(0, 0, 255));
+			});
+
+			square.on('hover', () => {
+				square.fill(new Color(0, 255, 0), 0.5);
+			}, () => {
+				square.fill(new Color(255, 0, 0), 0.5);
+			});
+
+			function rotate() {
 				setTimeout(() => {
 					square.rotate(2);
-					main();
+					rotate();
 				}, 1000 / fps);
 			}
-			main();
-
-			async function changeColors() {
-				await square.fill(new Color(255, 0, 0), 1);
-				await square.fill(new Color(0, 255, 0), 1);
-				await square.fill(new Color(0, 0, 255), 1);
-				changeColors();
-			}
-			changeColors();
+			rotate();
 		</script>
 	</body>
 </html>
