@@ -14,7 +14,7 @@
 			const circle = new Circle(new Point(150, 150), 50, new Color(0, 0, 255));
 			canvas.add(circle);
 			
-			const square = new Square(new Point(350, 300), 100, 100, new Color(255, 0, 0));
+			const square = new Square(new Point(350, 300), 100, 100, new Color(255, 0, 0), 100, 100);
 			canvas.add(square);
 
 			circle.on('mouseover', () => {
@@ -26,9 +26,9 @@
 			});
 
 			square.on('hover', () => {
-				square.fill(new Color(0, 255, 0), 0.5);
+				square.fill(new Color(0, 255, 0));
 			}, () => {
-				square.fill(new Color(255, 0, 0), 0.5);
+				square.fill(new Color(255, 0, 0));
 			});
 
 			function rotate() {

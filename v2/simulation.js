@@ -364,7 +364,7 @@ class Square extends SimulationElement {
 		const bottomRightVector = new Vector(this.bottomRight.mag, 0);
 		bottomRightVector.rotateTo(this.bottomRight.startAngle);
 
-		const cursorVector = new Vector(p.x - this.pos.x, p.y - this.pos.y);
+		const cursorVector = new Vector(p.x - this.pos.x - this.offsetX, p.y - this.pos.y - this.offsetY);
 		cursorVector.rotateTo(-this.rotation);
 
 		if (
