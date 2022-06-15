@@ -17,11 +17,17 @@
 			const square = new Square(new Point(350, 300), 100, 100, new Color(255, 0, 0), 100, 100);
 			canvas.add(square);
 
-			circle.on('mouseover', () => {
-				circle.fill(new Color(255, 0, 0));
-			});
+			const poly = new Polygon(new Point(600, 600), [
+				new Point(0, 0),
+				new Point(100, 0),
+				new Point(100, 200),
+				new Point(0, 100)
+			], new Color(0, 255, 0));
+			canvas.add(poly);
 
-			circle.on('mouseleave', () => {
+			circle.on('hover', () => {
+				circle.fill(new Color(255, 0, 0));
+			}, () => {
 				circle.fill(new Color(0, 0, 255));
 			});
 
@@ -34,6 +40,7 @@
 			function rotate() {
 				setTimeout(() => {
 					square.rotate(2);
+					poly.rotate(2);
 					rotate();
 				}, 1000 / fps);
 			}

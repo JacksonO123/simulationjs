@@ -1,5 +1,6 @@
 // global vars
 let fps;
+const validEvents = ['mousemove', 'click', 'hover', 'mouseover', 'mouseleave'];
 
 class Vector {
 	constructor(x, y, r = 0) {
@@ -188,7 +189,6 @@ class Circle extends SimulationElement {
 		c.closePath();
 	}
 	on(event, callback, callback2) {
-		const validEvents = ['mousemove', 'click', 'hover'];
 		if (!validEvents.includes(event)) {
 			console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
 		}
@@ -241,6 +241,44 @@ class Circle extends SimulationElement {
 	}
 	contains(p) {
 		return distance(p, this.pos) < this.radius;
+	}
+}
+
+class Polygon extends SimulationElement {
+	/***
+	 * @param {Color} color
+	 * @param {Point[]} points
+	 */
+	constructor(pos, points, color, r = 0, offsetX = 0, offsetY = 0) {
+		super(pos, color)
+		this.points = points.map(p => {
+			return new Point(p.x + offsetX, p.y + offsetY);
+		});
+		this.rotation = r;
+	}
+	rotate(deg) {
+		this.rotation += deg;
+		this.#setRotation();
+	}
+	rotateTo(deg) {
+		this.rotation = deg;
+		this.#setRotation();
+	}
+	#setRotation() {
+		this.points = this.points.map(p => {
+			p.rotateTo(this.rotation);
+			return p;
+		});
+	}
+	draw(c) {
+		c.beginPath();
+		c.fillStyle = rgbToHex(this.color);
+		c.moveTo(this.points[0].x + this.pos.x, this.points[0].y + this.pos.y);
+		for (let i = 1; i < this.points.length; i++) {
+			c.lineTo(this.points[i].x + this.pos.x, this.points[i].y + this.pos.y);
+		}
+		c.fill();
+		c.closePath();
 	}
 }
 
@@ -378,7 +416,6 @@ class Square extends SimulationElement {
 		return false;
 	}
 	on(event, callback, callback2) {
-		const validEvents = ['mousemove', 'click', 'hover'];
 		if (!validEvents.includes(event)) {
 			console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
 		}

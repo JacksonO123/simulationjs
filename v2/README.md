@@ -212,6 +212,46 @@ circle.on(
 
 The `Circle` class has access to all methods of the `SimulationElement` class.
 
+## Polygon
+
+To create more complicated shapes, use the `Polygon` oject.
+
+```javascript
+const poly = new Polygon(
+	/* position: Point */,
+	/* points: Point[] */,
+	/* rotation: number */,
+	/* rotationOffsetX: number */,
+	/* rotationOffsetY: number */
+);
+```
+
+**`rotate()`**
+
+The `rotate()` method allows you to rotate the polygon around the center of rotation, relative to the current rotation amount.
+
+_**Note:**_ Angle perameter is in degrees
+
+```javascript
+poly.rotate(
+	/* angle: number */
+);
+```
+
+**`rotateTo()`**
+
+The `rotateTo()` method allows you to set the current rotation amount to a specific angle.
+
+_**Note:**_ Angle perameter is in degrees
+
+```javascript
+poly.rotateTo(
+  /* angle: number */
+);
+```
+
+The `Polygon` object does not support events due to the possible complexity of the shape.
+
 ## Vector
 
 To create a vector, use the `new Vector()` method.
