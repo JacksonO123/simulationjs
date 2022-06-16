@@ -60,12 +60,12 @@ simulation.setSize(
 );
 ```
 
-**`fitWindow()`**
+**`fitElement()`**
 
-To fullscreen the simulation, use the `fitWindow()` method.
+To resize the canvas to the size of the parent element, use the `fitElement()` method.
 
 ```javascript
-simulation.fitWindow();
+simulation.fitElement();
 ```
 
 # Provided Objects
@@ -138,9 +138,10 @@ The `rotate()` method allows you to rotate the square around the center of rotat
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-square.rotate(
-	/* angle: number */
-);
+square
+  .rotate
+  /* angle: number */
+  ();
 ```
 
 **`rotateTo()`**
@@ -149,9 +150,10 @@ The `rotateTo()` method allows you to set the current rotation amount to a speci
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-square.rotateTo(
+square
+  .rotateTo
   /* angle: number */
-);
+  ();
 ```
 
 **`on()`**
@@ -233,9 +235,10 @@ The `rotate()` method allows you to rotate the polygon around the center of rota
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-poly.rotate(
-	/* angle: number */
-);
+poly
+  .rotate
+  /* angle: number */
+  ();
 ```
 
 **`rotateTo()`**
@@ -245,9 +248,10 @@ The `rotateTo()` method allows you to set the current rotation amount to a speci
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-poly.rotateTo(
+poly
+  .rotateTo
   /* angle: number */
-);
+  ();
 ```
 
 The `Polygon` object does not support events due to the possible complexity of the shape.
@@ -271,9 +275,10 @@ _**Note:**_ The `rotation` parameter is in degrees
 The `rotate()` method allows you to rotate the vector relative to the current rotation amount.
 
 ```javascript
-vector.rotate(
+vector
+  .rotate
   /* angle: number */
-);
+  ();
 ```
 
 **`rotateTo()`**
@@ -281,9 +286,10 @@ vector.rotate(
 The `rotateTo()` method allows you to set the current rotation amount to a specific angle.
 
 ```javascript
-vector.rotateTo(
+vector
+  .rotateTo
   /* angle: number */
-);
+  ();
 ```
 
 # Utility Objects/Functions
@@ -320,9 +326,10 @@ _**Note:**_ The `rotation` parameter is in degrees
 The `rotate()` method allows you to rotate the vector relative to the current rotation amount.
 
 ```javascript
-vector.rotate(
+vector
+  .rotate
   /* angle: number */
-);
+  ();
 ```
 
 **`rotateTo()`**
@@ -330,9 +337,10 @@ vector.rotate(
 The `rotateTo()` method allows you to set the current rotation amount to a specific angle.
 
 ```javascript
-vector.rotateTo(
+vector
+  .rotateTo
   /* angle: number */
-);
+  ();
 ```
 
 **`format()`**

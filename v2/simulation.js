@@ -472,7 +472,7 @@ class Simulation {
 	constructor(id, frameRate) {
 		fps = frameRate;
 		this.scene = [];
-		this.fullScreen = false;
+		this.fitting = false;
 		this.bgColor = '#ffffff';
 
 		this.canvas = document.getElementById(id);
@@ -486,6 +486,7 @@ class Simulation {
 		setTimeout(() => {
 			c.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+			// console.log(this.canvas.width, this.canvas.height);
 			c.beginPath();
 			c.fillStyle = this.bgColor;
 			c.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -508,25 +509,29 @@ class Simulation {
 	on(event, callback) {
 		this.canvas.addEventListener(event, callback);
 	}
-	fitWindow() {
-		this.fullScreen = true;
+	fitElement() {
+		this.fitting = true;
 		this.#resizeCanvas(this.canvas);
 	}
 	setSize(x, y) {
 		this.canvas.width = x;
 		this.canvas.height = y;
-		this.fullScreen = false;
+		this.fitting = false;
 	}
 	/**
 	 * @param {Color} color
 	 */
 	setBgColor(color) {
-		this.bgColor = rgbToHex(color);
+		if (color instanceof Color) {
+			this.bgColor = rgbToHex(color);
+		} else {
+			console.warn('Invalid color. Must be an instance of Color object');
+		}
 	}
 	#resizeCanvas(c) {
-		if (this.fullScreen) {
-			c.width = window.innerWidth;
-			c.height = window.innerHeight;
+		if (this.fitting) {
+			c.width = c.parentElement.clientWidth;
+			c.height = c.parentElement.clientHeight;
 		}
 	}
 }
