@@ -138,10 +138,9 @@ The `rotate()` method allows you to rotate the square around the center of rotat
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-square
-  .rotate
+square.rotate(
   /* angle: number */
-  ();
+);
 ```
 
 **`rotateTo()`**
@@ -150,10 +149,9 @@ The `rotateTo()` method allows you to set the current rotation amount to a speci
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-square
-  .rotateTo
+square.rotateTo(
   /* angle: number */
-  ();
+);
 ```
 
 **`on()`**
@@ -235,10 +233,9 @@ The `rotate()` method allows you to rotate the polygon around the center of rota
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-poly
-  .rotate
+poly.rotate(
   /* angle: number */
-  ();
+);
 ```
 
 **`rotateTo()`**
@@ -248,10 +245,9 @@ The `rotateTo()` method allows you to set the current rotation amount to a speci
 _**Note:**_ Angle perameter is in degrees
 
 ```javascript
-poly
-  .rotateTo
+poly.rotateTo(
   /* angle: number */
-  ();
+);
 ```
 
 The `Polygon` object does not support events due to the possible complexity of the shape.
@@ -275,10 +271,9 @@ _**Note:**_ The `rotation` parameter is in degrees
 The `rotate()` method allows you to rotate the vector relative to the current rotation amount.
 
 ```javascript
-vector
-  .rotate
+vector.rotate(
   /* angle: number */
-  ();
+);
 ```
 
 **`rotateTo()`**
@@ -286,10 +281,37 @@ vector
 The `rotateTo()` method allows you to set the current rotation amount to a specific angle.
 
 ```javascript
-vector
-  .rotateTo
+vector.rotateTo(
   /* angle: number */
-  ();
+);
+```
+
+**`normalize()`**
+
+The `normalize()` method allows you to normalize the vector.
+
+```javascript
+vector.normalize();
+```
+
+**`multiply()`**
+
+The `multiply()` method allows you to multiply the vector by a scalar.
+
+```javascript
+vector.multiply(
+	/* scalar: number */
+);
+```
+
+**`divide()`**
+
+The `divide()` method allows you to divide the vector by a scalar.
+
+```javascript
+vector.divide(
+	/* scalar: number */
+);
 ```
 
 # Utility Objects/Functions
@@ -326,10 +348,9 @@ _**Note:**_ The `rotation` parameter is in degrees
 The `rotate()` method allows you to rotate the vector relative to the current rotation amount.
 
 ```javascript
-vector
-  .rotate
+vector.rotate(
   /* angle: number */
-  ();
+);
 ```
 
 **`rotateTo()`**
@@ -337,10 +358,9 @@ vector
 The `rotateTo()` method allows you to set the current rotation amount to a specific angle.
 
 ```javascript
-vector
-  .rotateTo
+vector.rotateTo(
   /* angle: number */
-  ();
+);
 ```
 
 **`format()`**

@@ -33,6 +33,21 @@ class Vector {
 		c.stroke();
 		c.closePath();
 	}
+	normalize() {
+		this.x /= this.mag;
+		this.y /= this.mag;
+		this.mag = 1;
+	}
+	multiply(n) {
+		this.x *= n;
+		this.y *= n;
+		this.mag *= n;
+	}
+	divide(n) {
+		this.x /= n;
+		this.y /= n;
+		this.mag /= n;
+	}
 	format() {
 		return `(${this.x}, ${this.y})`;
 	}
