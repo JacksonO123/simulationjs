@@ -25,9 +25,10 @@ class Vector {
 		this.x = this.startX * Math.cos(deg) - this.startY * Math.sin(deg);
 		this.y = this.startX * Math.sin(deg) + this.startY * Math.cos(deg);
 	}
-	draw(c, x = 0, y = 0, color = '#000000', s = 1) {
+	draw(c, x = 0, y = 0, color = '#000000', s = 1, t = 1) {
 		c.beginPath();
 		c.strokeStyle = color;
+		c.lineWidth = t;
 		c.moveTo(x, y);
 		c.lineTo(x + this.x * s, y + this.y * s);
 		c.stroke();
@@ -179,6 +180,13 @@ class Color {
 		this.g = g;
 		this.b = b;
 	}
+	#compToHex(c) {
+		const hex = Math.round(c).toString(16);
+		return hex.length == 1 ? '0' + hex : hex;
+	}
+	toHex() {
+		return '#' + this.#compToHex(this.r) + this.#compToHex(this.g) + this.#compToHex(this.b);
+	}
 }
 
 class Point extends Vector {
@@ -190,6 +198,30 @@ class Point extends Vector {
 	}
 }
 
+class Line extends SimulationElement {
+	/**
+	 * @param {Point} p1 
+	 * @param {Point} p2 
+	 * @param {Color} color 
+	 */
+	constructor(p1, p2, thickness, color, r = 0) {
+		super(p1, color);
+		this.start = p1;
+		this.vec = new Vector(p2.x - p1.x, p2.y - p1.y);
+		this.vec.rotateTo(r);
+		this.thickness = thickness;
+	}
+	rotate(deg) {
+		this.vec.rotate(deg);
+	}
+	rotateTo(deg) {
+		this.vec.rotateTo(deg);
+	}
+	draw(c) {
+		this.vec.draw(c, this.start.x, this.start.y, this.color.toHex(), 1, this.thickness);
+	}
+}
+
 class Circle extends SimulationElement {
 	constructor(pos, radius, color) {
 		super(pos, color);
@@ -198,7 +230,7 @@ class Circle extends SimulationElement {
 	}
 	draw(c) {
 		c.beginPath();
-		c.fillStyle = rgbToHex(this.color);
+		c.fillStyle = this.color.toHex();
 		c.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, false);
 		c.fill();
 		c.closePath();
@@ -287,7 +319,7 @@ class Polygon extends SimulationElement {
 	}
 	draw(c) {
 		c.beginPath();
-		c.fillStyle = rgbToHex(this.color);
+		c.fillStyle = this.color.toHex();
 		c.moveTo(this.points[0].x + this.pos.x, this.points[0].y + this.pos.y);
 		for (let i = 1; i < this.points.length; i++) {
 			c.lineTo(this.points[i].x + this.pos.x, this.points[i].y + this.pos.y);
@@ -361,7 +393,7 @@ class Square extends SimulationElement {
 	}
 	draw(c) {
 		c.beginPath();
-		c.fillStyle = rgbToHex(this.color);
+		c.fillStyle = this.color.toHex();
 		c.moveTo(
 			this.pos.x + this.topLeft.x + this.offsetX,
 			this.pos.y + this.topLeft.y + this.offsetY
@@ -538,7 +570,7 @@ class Simulation {
 	 */
 	setBgColor(color) {
 		if (color instanceof Color) {
-			this.bgColor = rgbToHex(color);
+			this.bgColor = color.toHex();
 		} else {
 			console.warn('Invalid color. Must be an instance of Color object');
 		}
@@ -553,11 +585,6 @@ class Simulation {
 
 function pythag(x, y) {
 	return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-}
-
-function compToHex(c) {
-	let hex = Math.round(c).toString(16);
-	return hex.length == 1 ? '0' + hex : hex;
 }
 
 /***
@@ -578,11 +605,4 @@ function degToRad(deg) {
 
 function radToDeg(rad) {
 	return (rad * 180) / Math.PI;
-}
-
-/**
- * @param {Color} color
- */
-function rgbToHex(color) {
-	return '#' + compToHex(color.r) + compToHex(color.g) + compToHex(color.b);
 }

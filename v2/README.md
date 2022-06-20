@@ -212,6 +212,43 @@ circle.on(
 
 The `Circle` class has access to all methods of the `SimulationElement` class.
 
+## Line
+
+To create a Line object, use the `new Line()` method.
+
+```javascript
+const line = new Line(
+	/* start: Point */,
+	/* end: Point */,
+	/* thickness: number */,
+	/* color: Color */,
+);
+```
+
+**`rotate()`**
+
+The `rotate()` method allows you to rotate the line around the center of rotation (first point perameter), relative to the current rotation amount.
+
+_**Note:**_ Angle perameter is in degrees
+
+```javascript
+line.rotate(
+	/* angle: number */
+);
+```
+
+**`rotateTo()`**
+
+The `rotateTo()` method allows you to set the current rotation amount to a specific angle.
+
+_**Note:**_ Angle perameter is in degrees
+
+```javascript
+line.rotateTo(
+	/* angle: number */
+);
+```
+
 ## Polygon
 
 To create more complicated shapes, use the `Polygon` oject.
