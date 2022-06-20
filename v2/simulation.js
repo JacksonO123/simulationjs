@@ -207,15 +207,45 @@ class Line extends SimulationElement {
 	constructor(p1, p2, thickness, color, r = 0) {
 		super(p1, color);
 		this.start = p1;
-		this.vec = new Vector(p2.x - p1.x, p2.y - p1.y);
-		this.vec.rotateTo(r);
+		this.end = p2;
+		this.rotation = r;
+		this.#setVector();
 		this.thickness = thickness;
 	}
+	moveStart(p) {
+		this.start = p;
+		this.#setVector();
+	}
+	moveEnd(p) {
+		this.end = p;
+		this.#setVector();
+	}
+	#setVector() {
+		this.vec = new Vector(this.end.x - this.start.x, this.end.y - this.start.y);
+		this.vec.rotateTo(this.rotation);
+	}
 	rotate(deg) {
+		this.rotation += deg;
 		this.vec.rotate(deg);
 	}
 	rotateTo(deg) {
+		this.rotation = deg;
 		this.vec.rotateTo(deg);
+	}
+	/**
+	 * @param {Point} p 
+	 */
+	moveTo(p) {
+		this.start = p;
+	}
+	/**
+	 * @param {Vector} v 
+	 */
+	move(v) {
+		this.end.x += v.x;
+		this.end.y += v.y;
+		this.start.x += v.x;
+		this.start.y += v.y;
 	}
 	draw(c) {
 		this.vec.draw(c, this.start.x, this.start.y, this.color.toHex(), 1, this.thickness);
@@ -525,6 +555,7 @@ class Simulation {
 		this.canvas = document.getElementById(id);
 		window.addEventListener('resize', () => this.#resizeCanvas(this.canvas));
 		this.#resizeCanvas(this.canvas);
+
 		const ctx = this.canvas.getContext('2d');
 
 		this.#render(ctx);
@@ -580,6 +611,8 @@ class Simulation {
 			c.width = c.parentElement.clientWidth;
 			c.height = c.parentElement.clientHeight;
 		}
+		this.width = this.canvas.width;
+		this.height = this.canvas.height;
 	}
 }
 

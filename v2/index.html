@@ -26,7 +26,7 @@
 			], new Color(0, 255, 0));
 			canvas.add(poly);
 
-			const line = new Line(new Point(0, 0), new Point(canvas.canvas.width, canvas.canvas.height), 4, new Color(0, 255, 255));
+			const line = new Line(new Point(100, 100), new Point(0, 0), 4, new Color(0, 255, 255));
 			canvas.add(line);
 
 			circle.on('hover', () => {
@@ -45,6 +45,7 @@
 				setTimeout(() => {
 					square.rotate(2);
 					poly.rotate(2);
+					line.rotate(2);
 					rotate();
 				}, 1000 / fps);
 			}

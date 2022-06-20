@@ -249,6 +249,46 @@ line.rotateTo(
 );
 ```
 
+**`moveStart()`**
+
+The `moveStart()` method moves the start point of the line.
+
+```javascript
+line.moveStart(
+	/* position: Vector */,
+);
+```
+
+**`moveEnd()`**
+
+The `moveEnd()` method moves the end point of the line.
+
+```javascript
+line.moveEnd(
+	/* position: Vector */,
+);
+```
+
+**`moveTo()`**
+
+The `moveTo()` method moves the line to a specific position.
+
+```javascript
+line.moveTo(
+	/* position: Vector */,
+);
+```
+
+**`move()`**
+
+The `move()` method moves the line the amount specified. The movement is relative to the current position.
+
+```javascript
+line.move(
+	/* position: Vector */,
+);
+```
+
 ## Polygon
 
 To create more complicated shapes, use the `Polygon` oject.
@@ -415,3 +455,6 @@ const color = new Color(
 	/* b: number */
 );
 ```
+
+TODO:
+- add animations to various methods of shapes
