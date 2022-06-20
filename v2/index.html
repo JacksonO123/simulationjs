@@ -10,13 +10,16 @@
 		<script>
 			const canvas = new Simulation('canvas', 60);
 			canvas.fitElement();
-			// canvas.setBgColor(new Color(0, 0, 0));
+
+			const collection = new SceneCollection();
 
 			const circle = new Circle(new Point(150, 150), 50, new Color(0, 0, 255));
-			canvas.add(circle);
+			collection.add(circle);
 			
 			const square = new Square(new Point(350, 300), 100, 100, new Color(255, 0, 0), 100, 100);
-			canvas.add(square);
+			collection.add(square, 'sq');
+
+			canvas.add(collection);
 
 			const poly = new Polygon(new Point(600, 600), [
 				new Point(0, 0),
@@ -24,7 +27,9 @@
 				new Point(100, 200),
 				new Point(0, 100)
 			], new Color(0, 255, 0));
-			canvas.add(poly);
+			canvas.add(poly, 'p');
+
+			canvas.removeWithId('p');
 
 			const line = new Line(new Point(100, 100), new Point(0, 0), 4, new Color(0, 255, 255));
 			canvas.add(line);
@@ -35,11 +40,11 @@
 				circle.fill(new Color(0, 0, 255));
 			});
 
-			square.on('hover', () => {
-				square.fill(new Color(0, 255, 0));
-			}, () => {
-				square.fill(new Color(255, 0, 0));
-			});
+			// square.on('hover', () => {
+			// 	square.fill(new Color(0, 255, 0));
+			// }, () => {
+			// 	square.fill(new Color(255, 0, 0));
+			// });
 
 			function rotate() {
 				setTimeout(() => {

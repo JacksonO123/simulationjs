@@ -27,15 +27,31 @@ const simulation = new Simulation(
 
 To add an element to the Simulation, use the `add()` method. You are able to add any objects that inherite the `SimulationElement` class, as well as any graphical object provided by simulation.js.
 
-Example with a circle:
+```javascript
+simulation.add(
+	/* element: SimulationElement */,
+	/* id (optional): string */
+);
+```
+
+**`removeWithObject()`**
+
+To remove an element from the Simulation, use the `removeWithObject()` method.
 
 ```javascript
-const circle = new Circle(
-	/* position: Point */,
-	/* radius: number */,
-	/* color: Color */
+simulation.removeWithObject(
+	/* element: SimulationElement */
 );
-simulation.add(circle);
+```
+
+**`removeWithId()`**
+
+To remove an element from the Simulation with an id, use the `removeWithId()` method.
+
+```javascript
+simulation.removeWithId(
+	/* id: string */
+);
 ```
 
 **`on()`**
@@ -392,6 +408,47 @@ vector.divide(
 ```
 
 # Utility Objects/Functions
+
+## SceneCollection
+
+The `SceneCollection` is an object used to group object in the scene.
+
+```javascript
+const sceneCollection = new SceneCollection(
+	/* name (optional): string */
+);
+```
+
+**`add()`**
+
+The `add()` method allows you to add an object to the scene collection.
+
+```javascript
+sceneCollection.add(
+	/* object: SimulationElement */,
+	/* id (optional): string */
+);
+```
+
+**`removeWithObject()`**
+
+The `removeWithObject()` method allows you to remove an object from the scene collection.
+
+```javascript
+sceneCollection.removeWithObject(
+	/* object: SimulationElement */
+);
+```
+
+**`removeWithId()`**
+
+The `removeWithId()` method allows you to remove an object from the scene collection using the id defined when adding the element to the collection.
+
+```javascript
+sceneCollection.removeWithId(
+	/* id: string */
+);
+```
 
 ## Point
 

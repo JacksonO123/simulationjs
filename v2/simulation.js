@@ -198,6 +198,59 @@ class Point extends Vector {
 	}
 }
 
+class SceneCollection extends SimulationElement {
+	constructor(n = '') {
+		super(new Point(0, 0), new Color(0, 0, 0));
+		this.name = n;
+		this.scene = [];
+		this.idObjs = {};
+	}
+	add(element, id = null) {
+		if (element instanceof SimulationElement) {
+			if (id != null) {
+				this.idObjs[id] = element;
+			} else {
+				this.scene.push(element);
+			}
+		} else {
+			console.warn('Invalid Element. Must be an instance of SimElement');
+		}
+	}
+	/**
+	 * @param {string} id
+	 */
+	removeWithId(id) {
+		delete this.idObjs[id];
+	}
+	removeWithObject(element) {
+		for (const el of this.scene) {
+			if (el == element) {
+				this.scene.splice(this.scene.indexOf(el), 1);
+				return;
+			}
+		}
+		for (const key of Object.keys(this.idObjs)) {
+			if (this.idObjs[key] == element) {
+				delete this.idObjs[key];
+			}
+		}
+	}
+	setSimulationElement(sim) {
+		this.sim = sim;
+		for (const element of this.scene) {
+			element.setSimulationElement(sim);
+		}
+	}
+	draw(c) {
+		for (const element of this.scene) {
+			element.draw(c);
+		}
+		for (const element of Object.values(this.idObjs)) {
+			element.draw(c);
+		}
+	}
+}
+
 class Line extends SimulationElement {
 	/**
 	 * @param {Point} p1 
@@ -549,6 +602,7 @@ class Simulation {
 	constructor(id, frameRate) {
 		fps = frameRate;
 		this.scene = [];
+		this.idObjs = {};
 		this.fitting = false;
 		this.bgColor = '#ffffff';
 
@@ -576,12 +630,35 @@ class Simulation {
 			this.#render(c);
 		}, 1000 / fps);
 	}
-	add(element) {
+	add(element, id = null) {
 		if (element instanceof SimulationElement) {
-			element.setSimulationElement(this.canvas);
-			this.scene.push(element);
+			if (id != null) {
+				this.idObjs[id] = element;
+			} else {
+				element.setSimulationElement(this.canvas);
+				this.scene.push(element);
+			}
 		} else {
 			console.warn('Invalid Element. Must be an instance of SimElement');
+		}
+	}
+	/**
+	 * @param {string} id
+	 */
+	removeWithId(id) {
+		delete this.idObjs[id];
+	}
+	removeWithObject(element) {
+		for (const el of this.scene) {
+			if (el == element) {
+				this.scene.splice(this.scene.indexOf(el), 1);
+				return;
+			}
+		}
+		for (const key of Object.keys(this.idObjs)) {
+			if (this.idObjs[key] == element) {
+				delete this.idObjs[key];
+			}
 		}
 	}
 	on(event, callback) {
