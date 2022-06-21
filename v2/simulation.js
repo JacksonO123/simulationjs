@@ -207,6 +207,9 @@ class SceneCollection extends SimulationElement {
 	}
 	add(element, id = null) {
 		if (element instanceof SimulationElement) {
+			if (this.sim != null) {
+				element.setSimulationElement(this.sim);
+			}
 			if (id != null) {
 				this.idObjs[id] = element;
 			} else {
@@ -632,10 +635,10 @@ class Simulation {
 	}
 	add(element, id = null) {
 		if (element instanceof SimulationElement) {
+			element.setSimulationElement(this.canvas);
 			if (id != null) {
 				this.idObjs[id] = element;
 			} else {
-				element.setSimulationElement(this.canvas);
 				this.scene.push(element);
 			}
 		} else {
