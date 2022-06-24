@@ -35,19 +35,59 @@ class Vector {
 		c.closePath();
 	}
 	normalize() {
-		this.x /= this.mag;
-		this.y /= this.mag;
-		this.mag = 1;
+		if (this.mag != 0) {
+			this.x /= this.mag;
+			this.startX = this.x;
+			this.y /= this.mag;
+			this.startY = this.y;
+			this.mag = 1;
+		}
 	}
 	multiply(n) {
 		this.x *= n;
+		this.startX = this.x;
 		this.y *= n;
+		this.startY = this.y;
 		this.mag *= n;
+	}
+	multiplyX(n) {
+		this.x *= n;
+		this.mag = pythag(this.x, this.y);
+	}
+	multiplyY(n) {
+		this.y *= n;
+		this.mag = pythag(this.x, this.y);
 	}
 	divide(n) {
 		this.x /= n;
+		this.startX = this.x;
 		this.y /= n;
+		this.startY = this.y;
 		this.mag /= n;
+	}
+	appendMag(value) {
+		if (this.mag != 0) {
+			const newMag = this.mag + value;
+			this.normalize();
+			this.multiply(newMag);
+			this.mag = newMag;
+		}
+	}
+	appendX(value) {
+		this.x += value;
+		this.mag = pythag(this.x, this.y);
+	}
+	appendY(value) {
+		this.y += value;
+		this.mag = pythag(this.x, this.y);
+	}
+	setMag(value) {
+		this.normalize();
+		this.multiply(value);
+		this.mag = value;
+	}
+	clone() {
+		return new Vector(this.x, this.y, this.rotation);
 	}
 	format() {
 		return `(${this.x}, ${this.y})`;
@@ -321,6 +361,50 @@ class Circle extends SimulationElement {
 		c.fill();
 		c.closePath();
 	}
+	setRadius(value, t = 0) {
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.radius = value;
+				resolve();
+			}
+			const radiusChange = (value - this.radius) / (t * fps);
+			const startTime = Date.now();
+			const g = this;
+			function changeRadius() {
+				setTimeout(() => {
+					g.radius += radiusChange;
+					if (Date.now() - startTime < t * 1000) {
+						changeRadius();
+					} else {
+						resolve();
+					}
+				}, 1000 / fps);
+			}
+			changeRadius();
+		});
+	}
+	scale(value, t = 0) {
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.radius *= value;
+				resolve();
+			}
+			const radiusChange = ((this.radius * value) - this.radius) / (t * fps);
+			const startTime = Date.now();
+			const g = this;
+			function changeRadius() {
+				setTimeout(() => {
+					g.radius += radiusChange;
+					if (Date.now() - startTime < t * 1000) {
+						changeRadius();
+					} else {
+						resolve();
+					}
+				}, 1000 / fps);
+			}
+			changeRadius();
+		});
+	}
 	on(event, callback, callback2) {
 		if (!validEvents.includes(event)) {
 			console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
@@ -522,27 +606,185 @@ class Square extends SimulationElement {
 			);
 		}
 	}
+	scale(value, t = 0) {
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.topRight.multiply(value);
+				this.topLeft.multiply(value);
+				this.bottomRight.multiply(value);
+				this.bottomLeft.multiply(value);
+
+				resolve();
+			}
+
+			const topRightMag = this.topRight.mag;
+			const topLeftMag = this.topLeft.mag;
+			const bottomRightMag = this.topLeft.mag;
+			const bottomLeftMag = this.bottomLeft.mag;
+
+			const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
+			const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
+			const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
+			const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
+			const g = this;
+			const startTime = Date.now();
+
+			function changeLoop() {
+				setTimeout(() => {
+					g.topRight.appendMag(topRightChange);
+					g.topLeft.appendMag(topLeftChange);
+					g.bottomRight.appendMag(bottomRightChange);
+					g.bottomLeft.appendMag(bottomLeftChange);
+					if (Date.now() - startTime < t * 1000) {
+						changeLoop();
+					} else {
+						g.topRight.normalize();
+						g.topRight.multiply(topRightMag * value);
+
+						g.topLeft.normalize();
+						g.topLeft.multiply(topLeftMag * value);
+
+						g.bottomRight.normalize();
+						g.bottomRight.multiply(bottomRightMag * value);
+
+						g.bottomLeft.normalize();
+						g.bottomLeft.multiply(bottomLeftMag * value);
+						resolve();
+					}
+				}, 1000 / fps);
+			}
+			changeLoop();
+		});
+	}
+	scaleWidth(value, t = 0) {
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.topRight.multiplyX(value);
+				this.topLeft.multiplyX(value);
+				this.bottomRight.multiplyX(value);
+				this.bottomLeft.multiplyX(value);
+
+				resolve();
+			}
+
+			const topRightStart = this.topRight.clone();
+			const topLeftStart = this.topLeft.clone();
+			const bottomLeftStart = this.bottomLeft.clone();
+			const bottomRightStart = this.bottomRight.clone();
+			const topRightMag = topRightStart.x;
+			const topLeftMag = topLeftStart.x;
+			const bottomRightMag = bottomRightStart.x;
+			const bottomLeftMag = bottomLeftStart.x;
+			const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
+			const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
+			const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
+			const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
+			const g = this;
+			const startTime = Date.now();
+
+			function changeLoop() {
+				setTimeout(() => {
+					g.topRight.appendX(topRightChange);
+					g.topLeft.appendX(topLeftChange);
+					g.bottomRight.appendX(bottomRightChange);
+					g.bottomLeft.appendX(bottomLeftChange);
+					if (Date.now() - startTime < t * 1000) {
+						changeLoop();
+					} else {
+						topRightStart.x = topRightMag * value;
+						g.topRight = topRightStart.clone();
+
+						topLeftStart.x = topLeftMag * value;
+						g.topLeft = topLeftStart.clone();
+
+						bottomRightStart.x = bottomRightMag * value;
+						g.bottomRight = bottomRightStart.clone();
+
+						bottomLeftStart.x = bottomLeftMag * value;
+						g.bottomLeft = bottomLeftStart.clone();
+
+						resolve();
+					}
+				}, 1000 / fps);
+			}
+			changeLoop();
+		});
+	}
+	scaleHeight(value, t = 0) {
+		return new Promise((resolve, reject) => {
+			if (t == 0) {
+				this.topRight.multiplyY(value);
+				this.topLeft.multiplyY(value);
+				this.bottomRight.multiplyY(value);
+				this.bottomLeft.multiplyY(value);
+
+				resolve();
+			}
+
+			const topRightStart = this.topRight.clone();
+			const topLeftStart = this.topLeft.clone();
+			const bottomLeftStart = this.bottomLeft.clone();
+			const bottomRightStart = this.bottomRight.clone();
+			const topRightMag = topRightStart.y;
+			const topLeftMag = topLeftStart.y;
+			const bottomRightMag = bottomRightStart.y;
+			const bottomLeftMag = bottomLeftStart.y;
+			const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
+			const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
+			const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
+			const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
+			const g = this;
+			const startTime = Date.now();
+
+			function changeLoop() {
+				setTimeout(() => {
+					g.topRight.appendY(topRightChange);
+					g.topLeft.appendY(topLeftChange);
+					g.bottomRight.appendY(bottomRightChange);
+					g.bottomLeft.appendY(bottomLeftChange);
+					if (Date.now() - startTime < t * 1000) {
+						changeLoop();
+					} else {
+						topRightStart.y = topRightMag * value;
+						g.topRight = topRightStart.clone();
+
+						topLeftStart.y = topLeftMag * value;
+						g.topLeft = topLeftStart.clone();
+
+						bottomRightStart.y = bottomRightMag * value;
+						g.bottomRight = bottomRightStart.clone();
+
+						bottomLeftStart.y = bottomLeftMag * value;
+						g.bottomLeft = bottomLeftStart.clone();
+
+						resolve();
+					}
+				}, 1000 / fps);
+			}
+			changeLoop();
+		});
+	}
 	contains(p) {
 		const topLeftVector = new Vector(this.topLeft.mag, 0);
-		topLeftVector.rotateTo(this.topLeft.startAngle);
+		topLeftVector.rotateTo(90 - this.topLeft.startAngle);
 
 		const topRightVector = new Vector(this.topRight.mag, 0);
-		topRightVector.rotateTo(this.topRight.startAngle);
+		topRightVector.rotateTo(90 - this.topRight.startAngle);
 
 		const bottomLeftVector = new Vector(this.bottomLeft.mag, 0);
-		bottomLeftVector.rotateTo(this.bottomLeft.startAngle);
+		bottomLeftVector.rotateTo(90 - this.bottomLeft.startAngle);
 
 		const bottomRightVector = new Vector(this.bottomRight.mag, 0);
-		bottomRightVector.rotateTo(this.bottomRight.startAngle);
+		bottomRightVector.rotateTo(90 - this.bottomRight.startAngle);
 
 		const cursorVector = new Vector(p.x - this.pos.x - this.offsetX, p.y - this.pos.y - this.offsetY);
 		cursorVector.rotateTo(-this.rotation);
 
 		if (
-			cursorVector.x > topRightVector.x &&
-			cursorVector.x < bottomLeftVector.x &&
+			cursorVector.x > bottomLeftVector.x &&
+			cursorVector.x < topRightVector.x &&
 			cursorVector.y > topLeftVector.y &&
-			cursorVector.y < topRightVector.y
+			cursorVector.y < bottomLeftVector.y
 		) {
 			return true;
 		}

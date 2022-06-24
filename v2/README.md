@@ -186,8 +186,41 @@ The hover event requires two callback functions, one for the mouseover event, an
 ```javascript
 square.on(
 	/* event: string */,
-	/* callback1: function */
+	/* callback1: function */,
 	/* callback2: function */
+);
+```
+
+**`scale()`**
+
+The `scale()` method allows you to scale the size of the square by a scalar.
+
+```javascript
+square.scale(
+	/* scalar: number */,
+	/* animation time (optional): number */
+);
+```
+
+**`scaleWidth()`**
+
+The `scale()` method allows you to scale the width of a square by a scalar.
+
+```javascript
+square.scaleWidth(
+	/* scalar: number */,
+	/* animation time (optional): number */
+);
+```
+
+**`scaleHeight()`**
+
+The `scaleHeight()` method allows you to scale the height of a square by a scalar.
+
+```javascript
+square.scaleHeight(
+	/* scalar: number */,
+	/* animation time (optional): number */
 );
 ```
 
@@ -224,6 +257,28 @@ circle.on(
 	/* callback1: function */
 	/* callback2: function */
 );
+```
+
+**`setRadius()`**
+
+the `setRadius()` method allows you to set the radius of a circle to a specific number.
+
+```javascript
+circle.setRadius(
+	/* amount: number */,
+	/* animation time (optional): number */
+)
+```
+
+**`scale()`**
+
+the `scale()` method allows you to scale the radius of a circle by a scalar.
+
+```javascript
+circle.scale(
+	/* scalar: number */,
+	/* animation time (optional): number */
+)
 ```
 
 The `Circle` class has access to all methods of the `SimulationElement` class.
@@ -397,6 +452,26 @@ vector.multiply(
 );
 ```
 
+**`multiplyX()`**
+
+The `multiplyX()` method allows you to multiply the `x` component of a vector.
+
+```javascript
+vector.multiplyX(
+	/* amount: number */
+)
+```
+
+**`multiplyY()`**
+
+The `multiplyY()` method allows you to multiply the `y` component of a vector.
+
+```javascript
+vector.multiplyY(
+	/* amount: number */
+)
+```
+
 **`divide()`**
 
 The `divide()` method allows you to divide the vector by a scalar.
@@ -405,6 +480,54 @@ The `divide()` method allows you to divide the vector by a scalar.
 vector.divide(
 	/* scalar: number */
 );
+```
+
+**`appendMag()`**
+
+The `appendMag()` method allows you to scale the length of a vector up and down a specific amount.
+
+```javascript
+vector.appendMag(
+	/* amount: number */
+);
+```
+
+**`appendX()`**
+
+The `appendX()` method allows you to append to the `x` component of a vector a specific amount.
+
+```javascript
+vector.appendX(
+	/* amount: number */
+);
+```
+
+**`appendY()`**
+
+The `appendY()` method allows you to append to the `y` component of a vector a specific amount.
+
+```javascript
+vector.appendY(
+	/* amount: number */
+);
+```
+
+**`setMag()`**
+
+The `setMag()` method allows you to set the magnitude of a vector to a specific amount.
+
+```javascript
+vector.setMag(
+	/* amount: number */
+);
+```
+
+**`clone()`**
+
+The `clone()` method allows you to clone a vector and all of its component info.
+
+```javascript
+vector.clone();
 ```
 
 # Utility Objects/Functions

@@ -17,7 +17,7 @@
 			const circle = new Circle(new Point(150, 150), 50, new Color(0, 0, 255));
 			collection.add(circle);
 			
-			const square = new Square(new Point(350, 300), 100, 100, new Color(255, 0, 0), 100, 100);
+			const square = new Square(new Point(350, 400), 100, 200, new Color(255, 0, 0), 50, 100);
 			collection.add(square, 'sq');
 
 			const poly = new Polygon(new Point(600, 600), [
@@ -43,9 +43,23 @@
 				square.fill(new Color(255, 0, 0));
 			});
 
+			// square.setNodeVectors(true);
+
+			async function scale() {
+				await square.scaleWidth(2, 1);
+				await square.scaleHeight(2, 2);
+				async function rotate() {
+					setTimeout(() => {
+						square.rotate(0.5);
+						rotate();
+					}, 1000 / fps);
+				}
+				rotate();
+			}
+			scale();
+
 			function rotate() {
 				setTimeout(() => {
-					square.rotate(2);
 					poly.rotate(2);
 					line.rotate(2);
 					rotate();
