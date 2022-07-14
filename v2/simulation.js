@@ -52,11 +52,11 @@ class Vector {
 	}
 	multiplyX(n) {
 		this.x *= n;
-		this.mag = pythag(this.x, this.y);
+		this.#updateMag();
 	}
 	multiplyY(n) {
 		this.y *= n;
-		this.mag = pythag(this.x, this.y);
+		this.#updateMag();
 	}
 	divide(n) {
 		this.x /= n;
@@ -75,10 +75,21 @@ class Vector {
 	}
 	appendX(value) {
 		this.x += value;
-		this.mag = pythag(this.x, this.y);
+		this.#updateMag();
 	}
 	appendY(value) {
 		this.y += value;
+		this.#updateMag();
+	}
+	setX(value) {
+		this.x = value;
+		this.#updateMag();
+	}
+	setY(value) {
+		this.y = value;
+		this.#updateMag();
+	}
+	#updateMag() {
 		this.mag = pythag(this.x, this.y);
 	}
 	setMag(value) {
@@ -99,7 +110,7 @@ class SimulationElement {
 	 * @param {Point} pos
 	 * @param {Color} color
 	 */
-	constructor(pos, color) {
+	constructor(pos, color = new Color(0, 0, 0)) {
 		this.pos = pos;
 		this.color = color;
 		this.sim = null;
@@ -112,71 +123,45 @@ class SimulationElement {
 	 * @param {Number} t - time in seconds
 	 */
 	fill(color, t = 0) {
-		return new Promise((resolve, reject) => {
-			if (t == 0) {
-				this.color = color;
-				resolve();
-			} else {
-				const currentColor = new Color(
-					this.color.r,
-					this.color.g,
-					this.color.b
-				);
-				const changeR = (color.r - this.color.r) / (t * fps);
-				const changeG = (color.g - this.color.g) / (t * fps);
-				const changeB = (color.b - this.color.b) / (t * fps);
-				const startTime = Date.now();
-				const g = this;
-				function changeLoop() {
-					setTimeout(() => {
-						currentColor.r += changeR;
-						currentColor.g += changeG;
-						currentColor.b += changeB;
-						g.color.r = currentColor.r;
-						g.color.g = currentColor.g;
-						g.color.b = currentColor.b;
-						if (Date.now() - startTime < t * 1000) {
-							changeLoop();
-						} else {
-							g.color = color;
-							resolve();
-						}
-					}, 1000 / fps);
-				}
-				changeLoop();
-			}
-		});
+		const currentColor = new Color(
+			this.color.r,
+			this.color.g,
+			this.color.b
+		);
+		const changeR = (color.r - this.color.r) / (t * fps);
+		const changeG = (color.g - this.color.g) / (t * fps);
+		const changeB = (color.b - this.color.b) / (t * fps);
+
+		const func = () => {
+			this.color = color;
+		};
+
+		return transitionValues(func, () => {
+			currentColor.r += changeR;
+			currentColor.g += changeG;
+			currentColor.b += changeB;
+			this.color.r = currentColor.r;
+			this.color.g = currentColor.g;
+			this.color.b = currentColor.b;
+		}, func, t);
 	}
 	/**
 	 * @param {Point} p
 	 * @param {Number} t - time in seconds
 	 */
 	moveTo(p, t = 0) {
-		return new Promise((resolve, reject) => {
-			if (t == 0) {
-				this.pos = p;
-				resolve();
-			} else {
-				const changeX = (p.x - this.pos.x) / (t * fps);
-				const changeY = (p.y - this.pos.y) / (t * fps);
-				const g = this;
-				const startTime = Date.now();
-				function changeLoop() {
-					setTimeout(() => {
-						g.pos.x += changeX;
-						g.pos.y += changeY;
-						if (Date.now() - startTime < t * 1000) {
-							changeLoop();
-						} else {
-							g.pos.x = p.x;
-							g.pos.y = p.y;
-							resolve();
-						}
-					}, 1000 / fps);
-				}
-				changeLoop();
-			}
-		});
+		const changeX = (p.x - this.pos.x) / (t * fps);
+		const changeY = (p.y - this.pos.y) / (t * fps);
+
+		return transitionValues(() => {
+			this.pos = p;
+		}, () => {
+			this.pos.x += changeX;
+			this.pos.y += changeY;
+		}, () => {
+			this.pos.x = p.x;
+			this.pos.y = p.y;
+		}, t);
 	}
 	/**
 	 * @param {Vector} p
@@ -184,33 +169,20 @@ class SimulationElement {
 	 *
 	 */
 	move(p, t = 0) {
-		return new Promise((resolve, reject) => {
-			const startPos = new Point(this.pos.x, this.pos.y);
-			if (t == 0) {
-				this.pos.x += p.x;
-				this.pos.y += p.y;
-				resolve();
-			} else {
-				const changeX = p.x / (t * fps);
-				const changeY = p.y / (t * fps);
-				const g = this;
-				const startTime = Date.now();
-				function changeLoop() {
-					setTimeout(() => {
-						g.pos.x += changeX;
-						g.pos.y += changeY;
-						if (Date.now() - startTime < t * 1000) {
-							changeLoop();
-						} else {
-							g.pos.x = startPos.x + p.x;
-							g.pos.y = startPos.y + p.y;
-							resolve();
-						}
-					}, 1000 / fps);
-				}
-				changeLoop();
-			}
-		});
+		const changeX = p.x / (t * fps);
+		const changeY = p.y / (t * fps);
+		const startPos = new Point(this.pos.x, this.pos.y);
+
+		return transitionValues(() => {
+			this.pos.x += p.x;
+			this.pos.y += p.y;
+		}, () => {
+			this.pos.x += changeX;
+			this.pos.y += changeY;
+		}, () => {
+			this.pos.x = startPos.x + p.x;
+			this.pos.y = startPos.y + p.y;
+		}, t);
 	}
 }
 
@@ -230,6 +202,10 @@ class Color {
 }
 
 class Point extends Vector {
+	/**
+	 * @param {number} x 
+	 * @param {number} y 
+	 */
 	constructor(x, y) {
 		super(x, y);
 	}
@@ -349,6 +325,11 @@ class Line extends SimulationElement {
 }
 
 class Circle extends SimulationElement {
+	/**
+	 * @param {Point} pos 
+	 * @param {number} radius 
+	 * @param {Color} color 
+	 */
 	constructor(pos, radius, color) {
 		super(pos, color);
 		this.radius = radius;
@@ -362,48 +343,27 @@ class Circle extends SimulationElement {
 		c.closePath();
 	}
 	setRadius(value, t = 0) {
-		return new Promise((resolve, reject) => {
-			if (t == 0) {
-				this.radius = value;
-				resolve();
-			}
-			const radiusChange = (value - this.radius) / (t * fps);
-			const startTime = Date.now();
-			const g = this;
-			function changeRadius() {
-				setTimeout(() => {
-					g.radius += radiusChange;
-					if (Date.now() - startTime < t * 1000) {
-						changeRadius();
-					} else {
-						resolve();
-					}
-				}, 1000 / fps);
-			}
-			changeRadius();
-		});
+		const radiusChange = (value - this.radius) / (t * fps);
+
+		return transitionValues(() => {
+			this.radius = value;
+		}, () => {
+			this.radius += radiusChange;
+		}, () => {
+			this.radius = value;
+		}, t);
 	}
 	scale(value, t = 0) {
-		return new Promise((resolve, reject) => {
-			if (t == 0) {
-				this.radius *= value;
-				resolve();
-			}
-			const radiusChange = ((this.radius * value) - this.radius) / (t * fps);
-			const startTime = Date.now();
-			const g = this;
-			function changeRadius() {
-				setTimeout(() => {
-					g.radius += radiusChange;
-					if (Date.now() - startTime < t * 1000) {
-						changeRadius();
-					} else {
-						resolve();
-					}
-				}, 1000 / fps);
-			}
-			changeRadius();
-		});
+		const radiusChange = ((this.radius * value) - this.radius) / (t * fps);
+		const finalValue = this.radius * value;
+
+		return transitionValues(() => {
+			this.radius = finalValue;
+		}, () => {
+			this.radius += radiusChange;
+		}, () => {
+			this.radius = finalValue;
+		}, t);
 	}
 	on(event, callback, callback2) {
 		if (!validEvents.includes(event)) {
@@ -501,7 +461,7 @@ class Polygon extends SimulationElement {
 
 class Square extends SimulationElement {
 	/**
-	 * @param {Vector} position
+	 * @param {Point} pos
 	 * @param {Number} width
 	 * @param {Number} height
 	 * @param {Color} color
@@ -553,13 +513,40 @@ class Square extends SimulationElement {
 		this.bottomLeft.rotateTo(this.rotation);
 		this.bottomRight.rotateTo(this.rotation);
 	}
-	rotate(deg) {
-		this.rotation += deg;
-		this.#setRotation();
+	/**
+	 * @param {number} deg
+	 * @param {number} t
+	 */
+	rotate(deg, t = 0) {
+		const startRotation = this.rotation;
+		const rotationChange = deg / (t * fps);
+
+		const func = () => {
+			this.rotation = startRotation + deg;
+			this.#setRotation();
+		};
+
+		return transitionValues(func, () => {
+			this.rotation += rotationChange;
+			this.#setRotation();
+		}, func, t);
 	}
-	rotateTo(deg) {
-		this.rotation = deg;
-		this.#setRotation();
+	/**
+	 * @param {number} deg 
+	 * @param {number} t 
+	 */
+	rotateTo(deg, t = 0) {
+		const rotationChange = (deg - this.rotation) / (t * fps);
+
+		const func = () => {
+			this.rotation = deg;
+			this.#setRotation();
+		};
+
+		return transitionValues(func, () => {
+			this.rotation += rotationChange;
+			this.#setRotation();
+		}, func, t);
 	}
 	draw(c) {
 		c.beginPath();
@@ -607,162 +594,159 @@ class Square extends SimulationElement {
 		}
 	}
 	scale(value, t = 0) {
-		return new Promise((resolve, reject) => {
-			if (t == 0) {
-				this.topRight.multiply(value);
-				this.topLeft.multiply(value);
-				this.bottomRight.multiply(value);
-				this.bottomLeft.multiply(value);
+		const topRightMag = this.topRight.mag;
+		const topLeftMag = this.topLeft.mag;
+		const bottomRightMag = this.topLeft.mag;
+		const bottomLeftMag = this.bottomLeft.mag;
 
-				resolve();
-			}
+		const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
+		const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
+		const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
+		const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
 
-			const topRightMag = this.topRight.mag;
-			const topLeftMag = this.topLeft.mag;
-			const bottomRightMag = this.topLeft.mag;
-			const bottomLeftMag = this.bottomLeft.mag;
+		return transitionValues(() => {
+			this.topRight.multiply(value);
+			this.topLeft.multiply(value);
+			this.bottomRight.multiply(value);
+			this.bottomLeft.multiply(value);
+		}, () => {
+			this.topRight.appendMag(topRightChange);
+			this.topLeft.appendMag(topLeftChange);
+			this.bottomRight.appendMag(bottomRightChange);
+			this.bottomLeft.appendMag(bottomLeftChange);
+		}, () => {
+			this.topRight.normalize();
+			this.topRight.multiply(topRightMag * value);
 
-			const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
-			const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
-			const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
-			const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
-			const g = this;
-			const startTime = Date.now();
+			this.topLeft.normalize();
+			this.topLeft.multiply(topLeftMag * value);
 
-			function changeLoop() {
-				setTimeout(() => {
-					g.topRight.appendMag(topRightChange);
-					g.topLeft.appendMag(topLeftChange);
-					g.bottomRight.appendMag(bottomRightChange);
-					g.bottomLeft.appendMag(bottomLeftChange);
-					if (Date.now() - startTime < t * 1000) {
-						changeLoop();
-					} else {
-						g.topRight.normalize();
-						g.topRight.multiply(topRightMag * value);
+			this.bottomRight.normalize();
+			this.bottomRight.multiply(bottomRightMag * value);
 
-						g.topLeft.normalize();
-						g.topLeft.multiply(topLeftMag * value);
-
-						g.bottomRight.normalize();
-						g.bottomRight.multiply(bottomRightMag * value);
-
-						g.bottomLeft.normalize();
-						g.bottomLeft.multiply(bottomLeftMag * value);
-						resolve();
-					}
-				}, 1000 / fps);
-			}
-			changeLoop();
-		});
+			this.bottomLeft.normalize();
+			this.bottomLeft.multiply(bottomLeftMag * value);
+		}, t);
 	}
 	scaleWidth(value, t = 0) {
-		return new Promise((resolve, reject) => {
-			if (t == 0) {
-				this.topRight.multiplyX(value);
-				this.topLeft.multiplyX(value);
-				this.bottomRight.multiplyX(value);
-				this.bottomLeft.multiplyX(value);
+		const topRightStart = this.topRight.clone();
+		const topLeftStart = this.topLeft.clone();
+		const bottomLeftStart = this.bottomLeft.clone();
+		const bottomRightStart = this.bottomRight.clone();
+		const topRightMag = topRightStart.x;
+		const topLeftMag = topLeftStart.x;
+		const bottomRightMag = bottomRightStart.x;
+		const bottomLeftMag = bottomLeftStart.x;
+		const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
+		const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
+		const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
+		const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
 
-				resolve();
-			}
+		return transitionValues(() => {
+			this.topRight.multiplyX(value);
+			this.topLeft.multiplyX(value);
+			this.bottomRight.multiplyX(value);
+			this.bottomLeft.multiplyX(value);
+		}, () => {
+			this.topRight.appendX(topRightChange);
+			this.topLeft.appendX(topLeftChange);
+			this.bottomRight.appendX(bottomRightChange);
+			this.bottomLeft.appendX(bottomLeftChange);
+		}, () => {
+			topRightStart.x = topRightMag * value;
+			this.topRight = topRightStart.clone();
 
-			const topRightStart = this.topRight.clone();
-			const topLeftStart = this.topLeft.clone();
-			const bottomLeftStart = this.bottomLeft.clone();
-			const bottomRightStart = this.bottomRight.clone();
-			const topRightMag = topRightStart.x;
-			const topLeftMag = topLeftStart.x;
-			const bottomRightMag = bottomRightStart.x;
-			const bottomLeftMag = bottomLeftStart.x;
-			const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
-			const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
-			const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
-			const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
-			const g = this;
-			const startTime = Date.now();
+			topLeftStart.x = topLeftMag * value;
+			this.topLeft = topLeftStart.clone();
 
-			function changeLoop() {
-				setTimeout(() => {
-					g.topRight.appendX(topRightChange);
-					g.topLeft.appendX(topLeftChange);
-					g.bottomRight.appendX(bottomRightChange);
-					g.bottomLeft.appendX(bottomLeftChange);
-					if (Date.now() - startTime < t * 1000) {
-						changeLoop();
-					} else {
-						topRightStart.x = topRightMag * value;
-						g.topRight = topRightStart.clone();
+			bottomRightStart.x = bottomRightMag * value;
+			this.bottomRight = bottomRightStart.clone();
 
-						topLeftStart.x = topLeftMag * value;
-						g.topLeft = topLeftStart.clone();
+			bottomLeftStart.x = bottomLeftMag * value;
+			this.bottomLeft = bottomLeftStart.clone();
 
-						bottomRightStart.x = bottomRightMag * value;
-						g.bottomRight = bottomRightStart.clone();
-
-						bottomLeftStart.x = bottomLeftMag * value;
-						g.bottomLeft = bottomLeftStart.clone();
-
-						resolve();
-					}
-				}, 1000 / fps);
-			}
-			changeLoop();
-		});
+			this.width = this.topRight.x + this.topLeft.x;
+		}, t);
 	}
 	scaleHeight(value, t = 0) {
-		return new Promise((resolve, reject) => {
-			if (t == 0) {
-				this.topRight.multiplyY(value);
-				this.topLeft.multiplyY(value);
-				this.bottomRight.multiplyY(value);
-				this.bottomLeft.multiplyY(value);
+		const topRightStart = this.topRight.clone();
+		const topLeftStart = this.topLeft.clone();
+		const bottomLeftStart = this.bottomLeft.clone();
+		const bottomRightStart = this.bottomRight.clone();
+		const topRightMag = topRightStart.y;
+		const topLeftMag = topLeftStart.y;
+		const bottomRightMag = bottomRightStart.y;
+		const bottomLeftMag = bottomLeftStart.y;
+		const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
+		const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
+		const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
+		const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
 
-				resolve();
-			}
+		return transitionValues(() => {
+			this.topRight.multiplyY(value);
+			this.topLeft.multiplyY(value);
+			this.bottomRight.multiplyY(value);
+			this.bottomLeft.multiplyY(value);
+		}, () => {
+			this.topRight.appendY(topRightChange);
+			this.topLeft.appendY(topLeftChange);
+			this.bottomRight.appendY(bottomRightChange);
+			this.bottomLeft.appendY(bottomLeftChange);
+		}, () => {
+			topRightStart.y = topRightMag * value;
+			this.topRight = topRightStart.clone();
 
-			const topRightStart = this.topRight.clone();
-			const topLeftStart = this.topLeft.clone();
-			const bottomLeftStart = this.bottomLeft.clone();
-			const bottomRightStart = this.bottomRight.clone();
-			const topRightMag = topRightStart.y;
-			const topLeftMag = topLeftStart.y;
-			const bottomRightMag = bottomRightStart.y;
-			const bottomLeftMag = bottomLeftStart.y;
-			const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
-			const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
-			const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
-			const bottomLeftChange = ((bottomLeftMag * value) - bottomLeftMag) / (t * fps);
-			const g = this;
-			const startTime = Date.now();
+			topLeftStart.y = topLeftMag * value;
+			this.topLeft = topLeftStart.clone();
 
-			function changeLoop() {
-				setTimeout(() => {
-					g.topRight.appendY(topRightChange);
-					g.topLeft.appendY(topLeftChange);
-					g.bottomRight.appendY(bottomRightChange);
-					g.bottomLeft.appendY(bottomLeftChange);
-					if (Date.now() - startTime < t * 1000) {
-						changeLoop();
-					} else {
-						topRightStart.y = topRightMag * value;
-						g.topRight = topRightStart.clone();
+			bottomRightStart.y = bottomRightMag * value;
+			this.bottomRight = bottomRightStart.clone();
 
-						topLeftStart.y = topLeftMag * value;
-						g.topLeft = topLeftStart.clone();
+			bottomLeftStart.y = bottomLeftMag * value;
+			this.bottomLeft = bottomLeftStart.clone();
 
-						bottomRightStart.y = bottomRightMag * value;
-						g.bottomRight = bottomRightStart.clone();
+			this.height = this.topRight.y + this.bottomRight.y;
+		}, t);
+	}
+	setWidth(value, t = 0) {
+		function setValues(ctx) {
+			ctx.topRight.setX(value / 2);
+			ctx.topLeft.setX(-value / 2);
+			ctx.bottomRight.setX(value / 2);
+			ctx.bottomLeft.setX(-value / 2);
+		}
+		const widthChange = ((value - this.width) / 2) / (t * fps);
 
-						bottomLeftStart.y = bottomLeftMag * value;
-						g.bottomLeft = bottomLeftStart.clone();
+		return transitionValues(() => {
+			setValues(this);
+		}, () => {
+			this.topRight.appendX(widthChange);
+			this.topLeft.appendX(-widthChange);
+			this.bottomRight.appendX(widthChange);
+			this.bottomLeft.appendX(-widthChange);
+		}, () => {
+			setValues(this);
+		}, t);
+	}
+	setHeight(value, t = 0) {
+		function setValues(ctx) {
+			ctx.topRight.setY(-value / 2);
+			ctx.topLeft.setY(-value / 2);
+			ctx.bottomRight.setY(value / 2);
+			ctx.bottomLeft.setY(value / 2);
+		}
+		const heightChange = ((value - this.width) / 2) / (t * fps);
 
-						resolve();
-					}
-				}, 1000 / fps);
-			}
-			changeLoop();
-		});
+		return transitionValues(() => {
+			setValues(this);
+		}, () => {
+			this.topRight.appendY(-heightChange);
+			this.topLeft.appendY(-heightChange);
+			this.bottomRight.appendY(heightChange);
+			this.bottomLeft.appendY(heightChange);
+		}, () => {
+			setValues(this);
+		}, t);
 	}
 	contains(p) {
 		const topLeftVector = new Vector(this.topLeft.mag, 0);
@@ -844,7 +828,7 @@ class Square extends SimulationElement {
 }
 
 class Simulation {
-	constructor(id, frameRate) {
+	constructor(id, frameRate = 60) {
 		fps = frameRate;
 		this.scene = [];
 		this.idObjs = {};
@@ -852,6 +836,10 @@ class Simulation {
 		this.bgColor = '#ffffff';
 
 		this.canvas = document.getElementById(id);
+		if (!this.canvas) {
+			console.warn(`Canvas with id "${id}" not found`);
+			return;
+		}
 		window.addEventListener('resize', () => this.#resizeCanvas(this.canvas));
 		this.#resizeCanvas(this.canvas);
 
@@ -863,7 +851,6 @@ class Simulation {
 		setTimeout(() => {
 			c.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-			// console.log(this.canvas.width, this.canvas.height);
 			c.beginPath();
 			c.fillStyle = this.bgColor;
 			c.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -907,13 +894,16 @@ class Simulation {
 		}
 	}
 	on(event, callback) {
+		if (!this.canvas) return;
 		this.canvas.addEventListener(event, callback);
 	}
 	fitElement() {
+		if (!this.canvas) return;
 		this.fitting = true;
 		this.#resizeCanvas(this.canvas);
 	}
 	setSize(x, y) {
+		if (!this.canvas) return;
 		this.canvas.width = x;
 		this.canvas.height = y;
 		this.fitting = false;
@@ -929,6 +919,7 @@ class Simulation {
 		}
 	}
 	#resizeCanvas(c) {
+		if (!this.canvas) return;
 		if (this.fitting) {
 			c.width = c.parentElement.clientWidth;
 			c.height = c.parentElement.clientHeight;
@@ -938,6 +929,19 @@ class Simulation {
 	}
 }
 
+/**
+ * @param {number} num
+ * @returns {number}
+ */
+function abs(num) {
+	return Math.abs(num);
+}
+
+/**
+ * @param {number} x 
+ * @param {number} y 
+ * @returns {number}
+ */
 function pythag(x, y) {
 	return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 }
@@ -945,19 +949,74 @@ function pythag(x, y) {
 /***
  * @param {Point} p1
  * @param {Point} p2
+ * @returns {number}
  */
 function distance(p1, p2) {
 	return pythag(p1.x - p2.x, p1.y - p2.y);
 }
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * @returns {number}
+ */
 function atan2(x, y) {
 	return Math.atan2(y, x);
 }
 
+/**
+ * @param {number} deg 
+ * @returns {number}
+ */
 function degToRad(deg) {
 	return (deg * Math.PI) / 180;
 }
 
+/**
+ * @param {number} rad 
+ * @returns {number}
+ */
 function radToDeg(rad) {
 	return (rad * 180) / Math.PI;
+}
+
+class ChangeHandler {
+	constructor(c1, c2) {
+		this.c1 = c1;
+		this.c2 = c2;
+	}
+	start() {
+
+	}
+}
+
+/**
+ * @param {Function} callback1 - called when t is 0
+ * @param {Function} callback2 - called every frame until the animation is finished
+ * @param {Function} callback3 - called after animation is finished
+ * @param {number} t - animation time (seconds)
+ * @returns {Promise}
+ */
+function transitionValues(callback1, callback2, callback3, t) {
+	return new Promise((resolve, reject) => {
+		if (t == 0) {
+			callback1();
+			resolve();
+		} else {
+			const startTime = Date.now();
+
+			function changeLoop() {
+				setTimeout(() => {
+					callback2();
+					if (Date.now() - startTime < t * 1000) {
+						changeLoop();
+					} else {
+						callback3();
+						resolve();
+					}
+				}, 1000 / fps);
+			}
+			changeLoop();
+		}
+	});
 }
