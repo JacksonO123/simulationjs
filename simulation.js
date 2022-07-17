@@ -1,8 +1,15 @@
 // global vars
 let fps;
+let currentMousePos;
+let currentMouseEvent;
 const validEvents = ['mousemove', 'click', 'hover', 'mouseover', 'mouseleave'];
 
 class Vector {
+	/**
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} r
+	 */
 	constructor(x, y, r = 0) {
 		this.x = x;
 		this.y = y;
@@ -12,10 +19,16 @@ class Vector {
 		this.startY = y;
 		this.rotation = r;
 	}
+	/**
+	 * @param {number} deg
+	 */
 	rotate(deg) {
 		this.rotation += deg;
 		this.#setRotation();
 	}
+	/**
+	 * @param {number} deg
+	 */
 	rotateTo(deg) {
 		this.rotation = deg;
 		this.#setRotation();
@@ -25,6 +38,15 @@ class Vector {
 		this.x = this.startX * Math.cos(deg) - this.startY * Math.sin(deg);
 		this.y = this.startX * Math.sin(deg) + this.startY * Math.cos(deg);
 	}
+	/**
+	 * 
+	 * @param {any} c - context
+	 * @param {number} x 
+	 * @param {number} y 
+	 * @param {string} color - hex color, not Color object
+	 * @param {number} s - vector scale
+	 * @param {number} t - stroke width
+	 */
 	draw(c, x = 0, y = 0, color = '#000000', s = 1, t = 1) {
 		c.beginPath();
 		c.strokeStyle = color;
@@ -43,6 +65,9 @@ class Vector {
 			this.mag = 1;
 		}
 	}
+	/**
+	 * @param {number} n
+	 */
 	multiply(n) {
 		this.x *= n;
 		this.startX = this.x;
@@ -50,14 +75,23 @@ class Vector {
 		this.startY = this.y;
 		this.mag *= n;
 	}
+	/**
+	 * @param {number} n
+	 */
 	multiplyX(n) {
 		this.x *= n;
 		this.#updateMag();
 	}
+	/**
+	 * @param {number} n
+	 */
 	multiplyY(n) {
 		this.y *= n;
 		this.#updateMag();
 	}
+	/**
+	 * @param {number} n
+	 */
 	divide(n) {
 		this.x /= n;
 		this.startX = this.x;
@@ -65,6 +99,9 @@ class Vector {
 		this.startY = this.y;
 		this.mag /= n;
 	}
+	/**
+	 * @param {number} value
+	 */
 	appendMag(value) {
 		if (this.mag != 0) {
 			const newMag = this.mag + value;
@@ -73,18 +110,30 @@ class Vector {
 			this.mag = newMag;
 		}
 	}
+	/**
+	 * @param {number} value
+	 */
 	appendX(value) {
 		this.x += value;
 		this.#updateMag();
 	}
+	/**
+	 * @param {number} value
+	 */
 	appendY(value) {
 		this.y += value;
 		this.#updateMag();
 	}
+	/**
+	 * @param {number} value
+	 */
 	setX(value) {
 		this.x = value;
 		this.#updateMag();
 	}
+	/**
+	 * @param {number} value
+	 */
 	setY(value) {
 		this.y = value;
 		this.#updateMag();
@@ -92,6 +141,9 @@ class Vector {
 	#updateMag() {
 		this.mag = pythag(this.x, this.y);
 	}
+	/**
+	 * @param {number} value
+	 */
 	setMag(value) {
 		this.normalize();
 		this.multiply(value);
@@ -334,6 +386,7 @@ class Circle extends SimulationElement {
 		super(pos, color);
 		this.radius = radius;
 		this.hovering = false;
+		this.events = [];
 	}
 	draw(c) {
 		c.beginPath();
@@ -341,7 +394,13 @@ class Circle extends SimulationElement {
 		c.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, false);
 		c.fill();
 		c.closePath();
+		this.#checkEvents();
 	}
+	/**
+	 * @param {number} value
+	 * @param {number} t
+	 * @returns {Promise}
+	 */
 	setRadius(value, t = 0) {
 		const radiusChange = (value - this.radius) / (t * fps);
 
@@ -353,6 +412,11 @@ class Circle extends SimulationElement {
 			this.radius = value;
 		}, t);
 	}
+	/**
+	 * @param {number} value
+	 * @param {number} t
+	 * @returns {Promise}
+	 */
 	scale(value, t = 0) {
 		const radiusChange = ((this.radius * value) - this.radius) / (t * fps);
 		const finalValue = this.radius * value;
@@ -365,57 +429,66 @@ class Circle extends SimulationElement {
 			this.radius = finalValue;
 		}, t);
 	}
-	on(event, callback, callback2) {
+	/**
+	 * @param {string} event
+	 * @param {Function} callback
+	 * @param {Function} callback2
+	 */
+	#checkEvents() {
+		this.events.forEach(event => {
+			const name = event.name;
+			switch (name) {
+				case 'mouseover': {
+					if (!this.hovering && currentMousePos && this.contains(currentMousePos)) {
+						this.hovering = true;
+						event.callback(currentMouseEvent);
+					}
+					break;
+				}
+				case 'mouseleave': {
+					if (this.hovering && currentMousePos && !this.contains(currentMousePos)) {
+						this.hovering = false;
+						event.callback(currentMouseEvent);
+					}
+					break;
+				}
+				default: break;
+			}
+		});
+	}
+	on(event, callback1, callback2) {
 		if (!validEvents.includes(event)) {
 			console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
+			return;
 		}
 
-		switch (event) {
-			case 'mouseover': {
-				this.sim.addEventListener('mousemove', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (!this.hovering && this.contains(p)) {
-						this.hovering = true;
-						callback(e);
-					}
-				});
-				break;
-			}
-			case 'mouseleave': {
-				this.sim.addEventListener('mousemove', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (this.hovering && !this.contains(p)) {
-						this.hovering = false;
-						callback(e);
-					}
-				});
-				break;
-			}
-			case 'hover': {
-				this.on('mouseover', callback);
-				this.on('mouseleave', callback2);
-				break;
-			}
-			case 'mousemove': {
-				this.sim.addEventListener('mousemove', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (this.contains(p)) {
-						callback(e);
-					}
-				});
-				break;
-			}
-			case 'click': {
-				this.sim.addEventListener('click', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (this.contains(p)) {
-						callback(e);
-					}
-				});
-			}
-			default: break;
+		// specific events
+		if (event === 'mousemove') {
+			this.sim.addEventListener('mousemove', e => {
+				const p = new Point(e.offsetX, e.offsetY);
+				if (this.contains(p)) {
+					callback1(e);
+				}
+			});
+		} else if (event === 'hover') {
+			this.on('mouseover', callback1);
+			this.on('mouseleave', callback2);
+		} else if (event === 'click') {
+			this.sim.addEventListener('click', e => {
+				const p = new Point(e.clientX, e.clientY);
+				if (this.contains(p)) {
+					callback1(e);
+				}
+			});
+		} else {
+			const newEvent = new Event(event, callback1);
+			this.events.push(newEvent);
 		}
 	}
+	/**
+	 * @param {Point} p
+	 * @returns {boolean}
+	 */
 	contains(p) {
 		return distance(p, this.pos) < this.radius;
 	}
@@ -456,6 +529,13 @@ class Polygon extends SimulationElement {
 		}
 		c.fill();
 		c.closePath();
+	}
+}
+
+class Event {
+	constructor(name, callback) {
+		this.name = name;
+		this.callback = callback;
 	}
 }
 
@@ -502,8 +582,12 @@ class Square extends SimulationElement {
 			this.height / 2 - offsetY
 		);
 		this.hovering = false;
+		this.events = [];
 		this.#setRotation();
 	}
+	/**
+	 * @param {boolean} show 
+	 */
 	setNodeVectors(show) {
 		this.showNodeVectors = show;
 	}
@@ -574,7 +658,7 @@ class Square extends SimulationElement {
 			this.topLeft.draw(
 				c,
 				this.pos.x + this.offsetX,
-				this.pos.y + this.offsetY
+				this.pos.y + this.offsetY,
 			);
 			this.topRight.draw(
 				c,
@@ -592,11 +676,18 @@ class Square extends SimulationElement {
 				this.pos.y + this.offsetY
 			);
 		}
+
+		this.#checkEvents();
 	}
+	/**
+	 * @param {number} value
+	 * @param {number} t
+	 * @returns {Promise}
+	 */
 	scale(value, t = 0) {
 		const topRightMag = this.topRight.mag;
 		const topLeftMag = this.topLeft.mag;
-		const bottomRightMag = this.topLeft.mag;
+		const bottomRightMag = this.bottomRight.mag;
 		const bottomLeftMag = this.bottomLeft.mag;
 
 		const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
@@ -628,6 +719,11 @@ class Square extends SimulationElement {
 			this.bottomLeft.multiply(bottomLeftMag * value);
 		}, t);
 	}
+	/**
+	 * @param {value} value
+	 * @param {value} t
+	 * @returns {Promise}
+	 */
 	scaleWidth(value, t = 0) {
 		const topRightStart = this.topRight.clone();
 		const topLeftStart = this.topLeft.clone();
@@ -668,6 +764,12 @@ class Square extends SimulationElement {
 			this.width = this.topRight.x + this.topLeft.x;
 		}, t);
 	}
+	/**
+	 * 
+	 * @param {number} value
+	 * @param {number} t
+	 * @returns {Promise}
+	 */
 	scaleHeight(value, t = 0) {
 		const topRightStart = this.topRight.clone();
 		const topLeftStart = this.topLeft.clone();
@@ -708,7 +810,13 @@ class Square extends SimulationElement {
 			this.height = this.topRight.y + this.bottomRight.y;
 		}, t);
 	}
+	/**
+	 * @param {number} value
+	 * @param {number} t
+	 * @returns {Promise}
+	 */
 	setWidth(value, t = 0) {
+		// change this to use the y change of each vector individually
 		function setValues(ctx) {
 			ctx.topRight.setX(value / 2);
 			ctx.topLeft.setX(-value / 2);
@@ -728,7 +836,13 @@ class Square extends SimulationElement {
 			setValues(this);
 		}, t);
 	}
+	/**
+	 * @param {number} value
+	 * @param {number} t
+	 * @returns {Promise}
+	 */
 	setHeight(value, t = 0) {
+		// change this to use the y change of each vector individually
 		function setValues(ctx) {
 			ctx.topRight.setY(-value / 2);
 			ctx.topLeft.setY(-value / 2);
@@ -748,6 +862,10 @@ class Square extends SimulationElement {
 			setValues(this);
 		}, t);
 	}
+	/**
+	 * @param {Point} p
+	 * @returns {Promise}
+	 */
 	contains(p) {
 		const topLeftVector = new Vector(this.topLeft.mag, 0);
 		topLeftVector.rotateTo(90 - this.topLeft.startAngle);
@@ -774,55 +892,60 @@ class Square extends SimulationElement {
 		}
 		return false;
 	}
-	on(event, callback, callback2) {
+	#checkEvents() {
+		this.events.forEach(event => {
+			const name = event.name;
+			switch (name) {
+				case 'mouseover': {
+					if (!this.hovering && currentMousePos && this.contains(currentMousePos)) {
+						this.hovering = true;
+						event.callback(currentMouseEvent);
+					}
+					break;
+				}
+				case 'mouseleave': {
+					if (this.hovering && currentMousePos && !this.contains(currentMousePos)) {
+						this.hovering = false;
+						event.callback(currentMouseEvent);
+					}
+					break;
+				}
+				default: break;
+			}
+		});
+	}
+	/**
+	 * @param {string} event
+	 * @param {Function} callback
+	 * @param {Function} callback2
+	 */
+	on(event, callback1, callback2) {
 		if (!validEvents.includes(event)) {
 			console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
+			return;
 		}
-		switch (event) {
-			case 'mouseover': {
-				this.sim.addEventListener('mousemove', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (!this.hovering && this.contains(p)) {
-						this.hovering = true;
-						callback(e);
-					}
-				});
-				break;
-			}
-			case 'mouseleave': {
-				this.sim.addEventListener('mousemove', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (this.hovering && !this.contains(p)) {
-						this.hovering = false;
-						callback(e);
-					}
-				});
-				break;
-			}
-			case 'mousemove': {
-				this.sim.addEventListener('mousemove', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (this.contains(p)) {
-						callback(e);
-					}
-				});
-				break;
-			}
-			case 'click': {
-				this.sim.addEventListener('click', (e) => {
-					const p = new Point(e.clientX, e.clientY);
-					if (this.contains(p)) {
-						callback(e);
-					}
-				});
-				break;
-			}
-			case 'hover': {
-				this.on('mouseover', callback);
-				this.on('mouseleave', callback2);
-				break;
-			}
-			default: break;
+
+		// specific events
+		if (event === 'mousemove') {
+			this.sim.addEventListener('mousemove', (e) => {
+				const p = new Point(e.clientX, e.clientY);
+				if (this.contains(p)) {
+					callback1(e);
+				}
+			});
+		} else if (event === 'click') {
+			this.sim.addEventListener('click', (e) => {
+				const p = new Point(e.clientX, e.clientY);
+				if (this.contains(p)) {
+					callback1(e);
+				}
+			});
+		} else if (event === 'hover') {
+			this.on('mouseover', callback1);
+			this.on('mouseleave', callback2);
+		} else {
+			const newEvent = new Event(event, callback1);
+			this.events.push(newEvent);
 		}
 	}
 }
@@ -840,6 +963,10 @@ class Simulation {
 			console.warn(`Canvas with id "${id}" not found`);
 			return;
 		}
+		this.canvas.addEventListener('mousemove', e => {
+			currentMousePos = new Point(e.offsetX, e.offsetY);
+			currentMouseEvent = e;
+		});
 		window.addEventListener('resize', () => this.#resizeCanvas(this.canvas));
 		this.#resizeCanvas(this.canvas);
 
@@ -893,6 +1020,11 @@ class Simulation {
 			}
 		}
 	}
+	/**
+	 * @param {string} event
+	 * @param {Function} callback
+	 * @returns
+	 */
 	on(event, callback) {
 		if (!this.canvas) return;
 		this.canvas.addEventListener(event, callback);
@@ -902,6 +1034,11 @@ class Simulation {
 		this.fitting = true;
 		this.#resizeCanvas(this.canvas);
 	}
+	/**
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns
+	 */
 	setSize(x, y) {
 		if (!this.canvas) return;
 		this.canvas.width = x;
@@ -978,16 +1115,6 @@ function degToRad(deg) {
  */
 function radToDeg(rad) {
 	return (rad * 180) / Math.PI;
-}
-
-class ChangeHandler {
-	constructor(c1, c2) {
-		this.c1 = c1;
-		this.c2 = c2;
-	}
-	start() {
-
-	}
 }
 
 /**
