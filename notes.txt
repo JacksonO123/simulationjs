@@ -1,0 +1,5 @@
+- depending on the position of the center of a square,
+	the scale method may not scale the shape, but instead translate
+	it, and shrink it.
+- some transition functions override the component values of
+	other animations, and may not work together (probably ([{(maybe)}]))

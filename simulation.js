@@ -59,9 +59,9 @@ class Vector {
 	normalize() {
 		if (this.mag != 0) {
 			this.x /= this.mag;
-			this.startX = this.x;
+			this.startX /= this.mag;
 			this.y /= this.mag;
-			this.startY = this.y;
+			this.startY /= this.mag;
 			this.mag = 1;
 		}
 	}
@@ -70,9 +70,9 @@ class Vector {
 	 */
 	multiply(n) {
 		this.x *= n;
-		this.startX = this.x;
+		this.startX *= n;
 		this.y *= n;
-		this.startY = this.y;
+		this.startY *= n;
 		this.mag *= n;
 	}
 	/**
@@ -80,6 +80,7 @@ class Vector {
 	 */
 	multiplyX(n) {
 		this.x *= n;
+		this.startX *= n;
 		this.#updateMag();
 	}
 	/**
@@ -87,6 +88,7 @@ class Vector {
 	 */
 	multiplyY(n) {
 		this.y *= n;
+		this.startY *= n;
 		this.#updateMag();
 	}
 	/**
@@ -94,9 +96,9 @@ class Vector {
 	 */
 	divide(n) {
 		this.x /= n;
-		this.startX = this.x;
+		this.startX /= n
 		this.y /= n;
-		this.startY = this.y;
+		this.startY /= n
 		this.mag /= n;
 	}
 	/**
@@ -115,6 +117,7 @@ class Vector {
 	 */
 	appendX(value) {
 		this.x += value;
+		this.startX += value;
 		this.#updateMag();
 	}
 	/**
@@ -122,6 +125,7 @@ class Vector {
 	 */
 	appendY(value) {
 		this.y += value;
+		this.startY += value;
 		this.#updateMag();
 	}
 	/**
@@ -129,6 +133,7 @@ class Vector {
 	 */
 	setX(value) {
 		this.x = value;
+		this.startX = value;
 		this.#updateMag();
 	}
 	/**
@@ -136,6 +141,7 @@ class Vector {
 	 */
 	setY(value) {
 		this.y = value;
+		this.startY = value;
 		this.#updateMag();
 	}
 	#updateMag() {
@@ -336,11 +342,20 @@ class Line extends SimulationElement {
 		this.#setVector();
 		this.thickness = thickness;
 	}
-	moveStart(p) {
+	clone() {
+		return new Line(this.start, this.end, this.thickness, this.color, this.rotation);
+	}
+	/**
+	 * @param {Point} p
+	 */
+	setStart(p) {
 		this.start = p;
 		this.#setVector();
 	}
-	moveEnd(p) {
+	/**
+	 * @param {Point} p
+	 */
+	setEnd(p) {
 		this.end = p;
 		this.#setVector();
 	}
@@ -348,10 +363,16 @@ class Line extends SimulationElement {
 		this.vec = new Vector(this.end.x - this.start.x, this.end.y - this.start.y);
 		this.vec.rotateTo(this.rotation);
 	}
+	/**
+	 * @param {number} deg
+	 */
 	rotate(deg) {
 		this.rotation += deg;
 		this.vec.rotate(deg);
 	}
+	/**
+	 * @param {number} deg
+	 */
 	rotateTo(deg) {
 		this.rotation = deg;
 		this.vec.rotateTo(deg);
@@ -387,6 +408,9 @@ class Circle extends SimulationElement {
 		this.radius = radius;
 		this.hovering = false;
 		this.events = [];
+	}
+	clone() {
+		return new Circle(this.pos, this.radius, this.color);
 	}
 	draw(c) {
 		c.beginPath();
@@ -499,12 +523,19 @@ class Polygon extends SimulationElement {
 	 * @param {Color} color
 	 * @param {Point[]} points
 	 */
-	constructor(pos, points, color, r = 0, offsetX = 0, offsetY = 0) {
+	constructor(pos, points, color, r = 0, offsetPoint = new Point(0, 0)) {
 		super(pos, color)
+		this.rawPoints = points;
+		this.offsetPoint = offsetPoint;
+		this.offsetX = this.offsetPoint.x;
+		this.offsetY = this.offsetPoint.y;
 		this.points = points.map(p => {
-			return new Point(p.x + offsetX, p.y + offsetY);
+			return new Point(p.x + this.offsetX, p.y + this.offsetY);
 		});
 		this.rotation = r;
+	}
+	clone() {
+		return new Polygon(this.pos, this.rawPoints, this.color, this.rotation, this.offsetPoint);
 	}
 	rotate(deg) {
 		this.rotation += deg;
@@ -554,35 +585,40 @@ class Square extends SimulationElement {
 		width,
 		height,
 		color,
-		offsetX = 0,
-		offsetY = 0,
+		offsetPoint = new Point(0, 0),
 		rotation = 0
 	) {
 		super(pos, color);
 		this.width = width;
 		this.height = height;
-		this.offsetX = offsetX;
-		this.offsetY = offsetY;
 		this.rotation = rotation;
 		this.showNodeVectors = false;
-		this.topLeft = new Vector(
-			-this.width / 2 - offsetX,
-			-this.height / 2 - offsetY
-		);
-		this.topRight = new Vector(
-			this.width / 2 - offsetX,
-			-this.height / 2 - offsetY
-		);
-		this.bottomLeft = new Vector(
-			-this.width / 2 - offsetX,
-			this.height / 2 - offsetY
-		);
-		this.bottomRight = new Vector(
-			this.width / 2 - offsetX,
-			this.height / 2 - offsetY
-		);
 		this.hovering = false;
 		this.events = [];
+		this.updateOffsetPosition(offsetPoint)
+	}
+	/**
+	 * @param {Point} p - new position
+	 */
+	updateOffsetPosition(p) {
+		this.offsetX = p.x;
+		this.offsetY = p.y;
+		this.topLeft = new Vector(
+			-this.width / 2 - this.offsetX,
+			-this.height / 2 - this.offsetY
+		);
+		this.topRight = new Vector(
+			this.width / 2 - this.offsetX,
+			-this.height / 2 - this.offsetY
+		);
+		this.bottomLeft = new Vector(
+			-this.width / 2 - this.offsetX,
+			this.height / 2 - this.offsetY
+		);
+		this.bottomRight = new Vector(
+			this.width / 2 - this.offsetX,
+			this.height / 2 - this.offsetY
+		);
 		this.#setRotation();
 	}
 	/**
@@ -790,16 +826,20 @@ class Square extends SimulationElement {
 			this.bottomRight.appendX(bottomRightChange);
 			this.bottomLeft.appendX(bottomLeftChange);
 		}, () => {
-			topRightClone.x = topRightMag * value;
+			topRightClone.setX(1);
+			topRightClone.multiplyX(topRightMag * value);
 			this.topRight = topRightClone.clone();
 
-			topLeftClone.x = topLeftMag * value;
+			topLeftClone.setX(1);
+			topLeftClone.multiplyX(topLeftMag * value);
 			this.topLeft = topLeftClone.clone();
 
-			bottomRightClone.x = bottomRightMag * value;
+			bottomRightClone.setX(1);
+			bottomRightClone.multiplyX(bottomRightMag * value);
 			this.bottomRight = bottomRightClone.clone();
 
-			bottomLeftClone.x = bottomLeftMag * value;
+			bottomLeftClone.setX(1);
+			bottomLeftClone.multiplyX(bottomLeftMag * value);
 			this.bottomLeft = bottomLeftClone.clone();
 
 			this.#updateDimentions();
@@ -840,16 +880,20 @@ class Square extends SimulationElement {
 			this.bottomRight.appendY(bottomRightChange);
 			this.bottomLeft.appendY(bottomLeftChange);
 		}, () => {
-			topRightClone.y = topRightMag * value;
+			topRightClone.setY(1);
+			topRightClone.multiplyY(topRightMag * value);
 			this.topRight = topRightClone.clone();
 
-			topLeftClone.y = topLeftMag * value;
+			topLeftClone.setY(1);
+			topLeftClone.multiplyY(topLeftMag * value);
 			this.topLeft = topLeftClone.clone();
 
-			bottomRightClone.y = bottomRightMag * value;
+			bottomRightClone.setY(1);
+			bottomRightClone.multiplyY(bottomRightMag * value);
 			this.bottomRight = bottomRightClone.clone();
 
-			bottomLeftClone.y = bottomLeftMag * value;
+			bottomLeftClone.setY(1);
+			bottomLeftClone.multiplyY(bottomLeftMag * value);
 			this.bottomLeft = bottomLeftClone.clone();
 
 			this.#updateDimentions();
@@ -962,6 +1006,9 @@ class Square extends SimulationElement {
 			const newEvent = new Event(event, callback1);
 			this.events.push(newEvent);
 		}
+	}
+	clone() {
+		return new Square(this.pos, this.width, this.height, this.color, this.offsetPoint, rotation);
 	}
 }
 

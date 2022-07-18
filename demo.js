@@ -7,7 +7,7 @@ canvas.add(collection);
 const circle = new Circle(new Point(150, 150), 50, new Color(0, 0, 255));
 collection.add(circle);
 
-const square = new Square(new Point(350, 400), 100, 200, new Color(255, 0, 0), 50, 100);
+const square = new Square(new Point(350, 400), 100, 200, new Color(255, 0, 0), new Point(50, 100));
 collection.add(square, 'sq');
 
 const poly = new Polygon(new Point(600, 600), [

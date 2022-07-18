@@ -1,3 +1,0 @@
-- some general things
-- after animations finish, setting the vectors overrides other animations
-- not sure i will look later
