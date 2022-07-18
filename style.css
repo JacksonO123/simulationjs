@@ -10,3 +10,13 @@ body {
 	align-items: center;
 	overflow: hidden;
 }
+
+.test {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	height: 672px;
+	width: 100px;
+	background: black;
+	z-index: 100;
+}

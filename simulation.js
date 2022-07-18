@@ -700,6 +700,8 @@ class Square extends SimulationElement {
 			this.topLeft.multiply(value);
 			this.bottomRight.multiply(value);
 			this.bottomLeft.multiply(value);
+
+			this.#updateDimentions();
 		}, () => {
 			this.topRight.appendMag(topRightChange);
 			this.topLeft.appendMag(topLeftChange);
@@ -717,7 +719,42 @@ class Square extends SimulationElement {
 
 			this.bottomLeft.normalize();
 			this.bottomLeft.multiply(bottomLeftMag * value);
+
+			this.#updateDimentions();
 		}, t);
+	}
+	#getInitialStartAndMag() {
+		const topRightClone = this.topRight.clone();
+		const topLeftClone = this.topLeft.clone();
+		const bottomLeftClone = this.bottomLeft.clone();
+		const bottomRightClone = this.bottomRight.clone();
+		return {
+			topRightClone,
+			topLeftClone,
+			bottomLeftClone,
+			bottomRightClone
+		};
+	}
+	/**
+	 * @param {string} component - x or y component of cloned Vector's magnitude
+	 */
+	#getProcessedStartAndMag(component) {
+		const startAndMag = this.#getInitialStartAndMag();
+		const mags = Object.keys(startAndMag).reduce((prev, current, index) => {
+			let obj = {
+				...prev
+			};
+			if (component) {
+				obj[current.replace('Clone', 'Mag')] = startAndMag[current][component];
+			} else {
+				obj[current.replace('Clone', 'Mag')] = current.mag;
+			}
+			return obj;
+		}, {});
+		return {
+			...startAndMag,
+			...mags
+		};
 	}
 	/**
 	 * @param {value} value
@@ -725,14 +762,16 @@ class Square extends SimulationElement {
 	 * @returns {Promise}
 	 */
 	scaleWidth(value, t = 0) {
-		const topRightStart = this.topRight.clone();
-		const topLeftStart = this.topLeft.clone();
-		const bottomLeftStart = this.bottomLeft.clone();
-		const bottomRightStart = this.bottomRight.clone();
-		const topRightMag = topRightStart.x;
-		const topLeftMag = topLeftStart.x;
-		const bottomRightMag = bottomRightStart.x;
-		const bottomLeftMag = bottomLeftStart.x;
+		let {
+			topRightClone,
+			topLeftClone,
+			bottomRightClone,
+			bottomLeftClone,
+			topRightMag,
+			topLeftMag,
+			bottomRightMag,
+			bottomLeftMag,
+		} = this.#getProcessedStartAndMag('x');
 		const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
 		const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
 		const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
@@ -743,25 +782,27 @@ class Square extends SimulationElement {
 			this.topLeft.multiplyX(value);
 			this.bottomRight.multiplyX(value);
 			this.bottomLeft.multiplyX(value);
+
+			this.#updateDimentions();
 		}, () => {
 			this.topRight.appendX(topRightChange);
 			this.topLeft.appendX(topLeftChange);
 			this.bottomRight.appendX(bottomRightChange);
 			this.bottomLeft.appendX(bottomLeftChange);
 		}, () => {
-			topRightStart.x = topRightMag * value;
-			this.topRight = topRightStart.clone();
+			topRightClone.x = topRightMag * value;
+			this.topRight = topRightClone.clone();
 
-			topLeftStart.x = topLeftMag * value;
-			this.topLeft = topLeftStart.clone();
+			topLeftClone.x = topLeftMag * value;
+			this.topLeft = topLeftClone.clone();
 
-			bottomRightStart.x = bottomRightMag * value;
-			this.bottomRight = bottomRightStart.clone();
+			bottomRightClone.x = bottomRightMag * value;
+			this.bottomRight = bottomRightClone.clone();
 
-			bottomLeftStart.x = bottomLeftMag * value;
-			this.bottomLeft = bottomLeftStart.clone();
+			bottomLeftClone.x = bottomLeftMag * value;
+			this.bottomLeft = bottomLeftClone.clone();
 
-			this.width = this.topRight.x + this.topLeft.x;
+			this.#updateDimentions();
 		}, t);
 	}
 	/**
@@ -771,14 +812,16 @@ class Square extends SimulationElement {
 	 * @returns {Promise}
 	 */
 	scaleHeight(value, t = 0) {
-		const topRightStart = this.topRight.clone();
-		const topLeftStart = this.topLeft.clone();
-		const bottomLeftStart = this.bottomLeft.clone();
-		const bottomRightStart = this.bottomRight.clone();
-		const topRightMag = topRightStart.y;
-		const topLeftMag = topLeftStart.y;
-		const bottomRightMag = bottomRightStart.y;
-		const bottomLeftMag = bottomLeftStart.y;
+		let {
+			topRightClone,
+			topLeftClone,
+			bottomLeftClone,
+			bottomRightClone,
+			topRightMag,
+			topLeftMag,
+			bottomRightMag,
+			bottomLeftMag,
+		} = this.#getProcessedStartAndMag('y');
 		const topRightChange = ((topRightMag * value) - topRightMag) / (t * fps);
 		const topLeftChange = ((topLeftMag * value) - topLeftMag) / (t * fps);
 		const bottomRightChange = ((bottomRightMag * value) - bottomRightMag) / (t * fps);
@@ -789,25 +832,27 @@ class Square extends SimulationElement {
 			this.topLeft.multiplyY(value);
 			this.bottomRight.multiplyY(value);
 			this.bottomLeft.multiplyY(value);
+
+			this.#updateDimentions();
 		}, () => {
 			this.topRight.appendY(topRightChange);
 			this.topLeft.appendY(topLeftChange);
 			this.bottomRight.appendY(bottomRightChange);
 			this.bottomLeft.appendY(bottomLeftChange);
 		}, () => {
-			topRightStart.y = topRightMag * value;
-			this.topRight = topRightStart.clone();
+			topRightClone.y = topRightMag * value;
+			this.topRight = topRightClone.clone();
 
-			topLeftStart.y = topLeftMag * value;
-			this.topLeft = topLeftStart.clone();
+			topLeftClone.y = topLeftMag * value;
+			this.topLeft = topLeftClone.clone();
 
-			bottomRightStart.y = bottomRightMag * value;
-			this.bottomRight = bottomRightStart.clone();
+			bottomRightClone.y = bottomRightMag * value;
+			this.bottomRight = bottomRightClone.clone();
 
-			bottomLeftStart.y = bottomLeftMag * value;
-			this.bottomLeft = bottomLeftStart.clone();
+			bottomLeftClone.y = bottomLeftMag * value;
+			this.bottomLeft = bottomLeftClone.clone();
 
-			this.height = this.topRight.y + this.bottomRight.y;
+			this.#updateDimentions();
 		}, t);
 	}
 	/**
@@ -816,25 +861,8 @@ class Square extends SimulationElement {
 	 * @returns {Promise}
 	 */
 	setWidth(value, t = 0) {
-		// change this to use the y change of each vector individually
-		function setValues(ctx) {
-			ctx.topRight.setX(value / 2);
-			ctx.topLeft.setX(-value / 2);
-			ctx.bottomRight.setX(value / 2);
-			ctx.bottomLeft.setX(-value / 2);
-		}
-		const widthChange = ((value - this.width) / 2) / (t * fps);
-
-		return transitionValues(() => {
-			setValues(this);
-		}, () => {
-			this.topRight.appendX(widthChange);
-			this.topLeft.appendX(-widthChange);
-			this.bottomRight.appendX(widthChange);
-			this.bottomLeft.appendX(-widthChange);
-		}, () => {
-			setValues(this);
-		}, t);
+		const scale = value / this.width;
+		return this.scaleWidth(scale, t);
 	}
 	/**
 	 * @param {number} value
@@ -842,25 +870,8 @@ class Square extends SimulationElement {
 	 * @returns {Promise}
 	 */
 	setHeight(value, t = 0) {
-		// change this to use the y change of each vector individually
-		function setValues(ctx) {
-			ctx.topRight.setY(-value / 2);
-			ctx.topLeft.setY(-value / 2);
-			ctx.bottomRight.setY(value / 2);
-			ctx.bottomLeft.setY(value / 2);
-		}
-		const heightChange = ((value - this.width) / 2) / (t * fps);
-
-		return transitionValues(() => {
-			setValues(this);
-		}, () => {
-			this.topRight.appendY(-heightChange);
-			this.topLeft.appendY(-heightChange);
-			this.bottomRight.appendY(heightChange);
-			this.bottomLeft.appendY(heightChange);
-		}, () => {
-			setValues(this);
-		}, t);
+		const scale = value / this.height;
+		return this.scaleHeight(scale, t);
 	}
 	/**
 	 * @param {Point} p
@@ -891,6 +902,10 @@ class Square extends SimulationElement {
 			return true;
 		}
 		return false;
+	}
+	#updateDimentions() {
+		this.height = this.topRight.y + this.bottomRight.y;
+		this.width = this.topRight.x + this.topLeft.x;
 	}
 	#checkEvents() {
 		this.events.forEach(event => {
